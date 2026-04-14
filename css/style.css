@@ -482,19 +482,20 @@ body, html {
 
 #save-toast {
     position: fixed;
-    bottom: max(90px, calc(env(safe-area-inset-bottom) + 84px));
+    top: max(76px, calc(env(safe-area-inset-top) + 70px));
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateX(-50%) translateY(-10px);
     background: rgba(34, 197, 94, 0.2);
     border: 1px solid rgba(34, 197, 94, 0.5);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #86efac;
     padding: 8px 20px;
     border-radius: 99px;
     font-size: 0.82rem;
     font-weight: 600;
     letter-spacing: 0.05em;
-    z-index: 20;
+    z-index: 30;
     opacity: 0;
     transition: opacity 0.2s, transform 0.2s;
     pointer-events: none;
