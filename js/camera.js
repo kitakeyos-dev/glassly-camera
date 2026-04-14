@@ -136,6 +136,7 @@ function onResults(results) {
                     if (currentProgress >= 1) {
                         frozenGlass = currentGestureData;
                         frozenCtx.drawImage(results.image, 0, 0, w, h);
+                        frozenFilter    = currentCameraFilter;
                         isCooldown      = true;
                         snapTimer       = 0;
                         currentProgress = 0;
@@ -162,12 +163,13 @@ function onResults(results) {
 
     ctx.clearRect(0, 0, w, h);
 
-    const filterDef = CAMERA_FILTERS.find(f => f.id === currentCameraFilter);
-    const filterCss = filterDef ? filterDef.css : 'none';
-
     const usesFrozenBg = frozenGlass && !activeGlass;
+    const bgFilterId = usesFrozenBg ? frozenFilter : currentCameraFilter;
+    const bgFilterDef = CAMERA_FILTERS.find(f => f.id === bgFilterId);
+    const bgFilterCss = bgFilterDef ? bgFilterDef.css : 'none';
+
     ctx.save();
-    ctx.filter = filterCss;
+    ctx.filter = bgFilterCss;
     ctx.drawImage(usesFrozenBg ? frozenCanvas : results.image, 0, 0, w, h);
     ctx.restore();
 

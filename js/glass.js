@@ -51,6 +51,8 @@ function buildPath(glass) {
 
 function drawGlass3D(liveImage, glass, progress) {
     const isSnapped = progress >= 1;
+    const liveFilterDef = CAMERA_FILTERS.find(f => f.id === currentCameraFilter);
+    const liveFilterCss = liveFilterDef ? liveFilterDef.css : 'none';
     ctx.save();
 
     // Clip vùng hình
@@ -62,6 +64,7 @@ function drawGlass3D(liveImage, glass, progress) {
     ctx.translate(glass.cx, glass.cy);
     ctx.scale(zoom, zoom);
     ctx.translate(-glass.cx, -glass.cy);
+    ctx.filter = liveFilterCss;
     ctx.drawImage(liveImage, 0, 0, canvasEl.width, canvasEl.height);
 
     // Chromatic aberration khi snapped
