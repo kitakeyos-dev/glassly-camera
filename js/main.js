@@ -420,3 +420,12 @@ if (totalAssets === 0) {
 }
 
 startCamera().catch(() => {});
+
+// Register PWA service worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+            console.warn('SW registration failed:', err);
+        });
+    });
+}

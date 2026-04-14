@@ -2,19 +2,44 @@
 
 let countdownActive = false;
 
+// Reusable offscreen canvases — creating a new one per capture
+// triggers large allocations and forces the GC while the camera loop runs.
+const saveFrameCanvas = document.createElement('canvas');
+const saveFrameCtx = saveFrameCanvas.getContext('2d');
+const thumbFrameCanvas = document.createElement('canvas');
+const thumbFrameCtx = thumbFrameCanvas.getContext('2d');
+const HISTORY_THUMB_MAX = 320;
+
 function saveCurrentFrame() {
     if (!canvasEl.width || !canvasEl.height) return;
 
-    const save = document.createElement('canvas');
-    save.width  = canvasEl.width;
-    save.height = canvasEl.height;
-    const sCtx = save.getContext('2d');
-    sCtx.translate(save.width, 0);
-    sCtx.scale(-1, 1);
-    sCtx.drawImage(canvasEl, 0, 0);
+    const w = canvasEl.width;
+    const h = canvasEl.height;
+    if (saveFrameCanvas.width !== w || saveFrameCanvas.height !== h) {
+        saveFrameCanvas.width = w;
+        saveFrameCanvas.height = h;
+    }
+    saveFrameCtx.setTransform(1, 0, 0, 1, 0, 0);
+    saveFrameCtx.clearRect(0, 0, w, h);
+    saveFrameCtx.translate(w, 0);
+    saveFrameCtx.scale(-1, 1);
+    saveFrameCtx.drawImage(canvasEl, 0, 0);
 
-    const dataUrl = save.toDataURL('image/png');
-    pushCapturedPhoto(dataUrl);
+    // JPEG is ~5-10x smaller than PNG and much faster to encode/decode.
+    const dataUrl = saveFrameCanvas.toDataURL('image/jpeg', 0.9);
+
+    const thumbScale = Math.min(1, HISTORY_THUMB_MAX / Math.max(w, h));
+    const tw = Math.max(1, Math.round(w * thumbScale));
+    const th = Math.max(1, Math.round(h * thumbScale));
+    if (thumbFrameCanvas.width !== tw || thumbFrameCanvas.height !== th) {
+        thumbFrameCanvas.width = tw;
+        thumbFrameCanvas.height = th;
+    }
+    thumbFrameCtx.clearRect(0, 0, tw, th);
+    thumbFrameCtx.drawImage(saveFrameCanvas, 0, 0, tw, th);
+    const thumbUrl = thumbFrameCanvas.toDataURL('image/jpeg', 0.75);
+
+    pushCapturedPhoto(dataUrl, thumbUrl);
 
     if (navigator.vibrate) navigator.vibrate(30);
     showToast('Đã lưu vào lịch sử.');
@@ -65,7 +90,18 @@ async function handleHistoryUpload(file) {
         c.imageSmoothingQuality = 'high';
         c.drawImage(bitmap, 0, 0, w, h);
         const dataUrl = cvs.toDataURL('image/jpeg', 0.88);
-        pushCapturedPhoto(dataUrl);
+
+        const thumbScale = Math.min(1, HISTORY_THUMB_MAX / Math.max(w, h));
+        const tw = Math.max(1, Math.round(w * thumbScale));
+        const th = Math.max(1, Math.round(h * thumbScale));
+        const tcvs = document.createElement('canvas');
+        tcvs.width = tw;
+        tcvs.height = th;
+        tcvs.getContext('2d').drawImage(cvs, 0, 0, tw, th);
+        const thumbUrl = tcvs.toDataURL('image/jpeg', 0.75);
+
+        if (bitmap.close) bitmap.close();
+        pushCapturedPhoto(dataUrl, thumbUrl);
         showToast('Đã thêm ảnh!');
     } catch (error) {
         showToast('Không đọc được ảnh.', 2400);

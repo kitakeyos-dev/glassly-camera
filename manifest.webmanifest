@@ -1,0 +1,18 @@
+{
+    "name": "Glassly — Kính 3D bằng cử chỉ tay",
+    "short_name": "Glassly",
+    "description": "Tạo kính 3D bằng cử chỉ tay, ghép ảnh, sticker, khung kawaii.",
+    "lang": "vi",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0a0a12",
+    "theme_color": "#6366f1",
+    "icons": [
+        { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "assets/icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "assets/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

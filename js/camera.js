@@ -8,8 +8,12 @@ function onResults(results) {
         setTimeout(() => { loadingEl.style.display = 'none'; }, 600);
     }
 
-    const w = canvasEl.width  = videoEl.videoWidth  || 1280;
-    const h = canvasEl.height = videoEl.videoHeight || 720;
+    const w = videoEl.videoWidth  || 1280;
+    const h = videoEl.videoHeight || 720;
+    // Assigning to canvas.width/height always clears the bitmap and resets ctx
+    // state — only do it when the size actually changes.
+    if (canvasEl.width !== w) canvasEl.width = w;
+    if (canvasEl.height !== h) canvasEl.height = h;
 
     if (frozenCanvas.width !== w || frozenCanvas.height !== h) {
         frozenCanvas.width = w; frozenCanvas.height = h;

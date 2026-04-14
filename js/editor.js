@@ -356,7 +356,7 @@ function renderEditorPhotoPicker() {
 
     editorPhotoPickerEl.innerHTML = capturedPhotos.map(photo => `
         <button class="editor-photo-chip${editorState.selectedPhotoIds.includes(photo.id) ? ' selected' : ''}" type="button" data-photo-id="${photo.id}">
-            <img src="${photo.dataUrl}" alt="${photo.label}">
+            <img src="${photo.thumbUrl || photo.dataUrl}" alt="${photo.label}">
             <div class="editor-photo-chip-meta">
                 <strong>${photo.label}</strong>
                 <span>${formatCaptureTime(photo.createdAt)}</span>

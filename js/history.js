@@ -67,7 +67,9 @@ function renderHistoryDrawer() {
         const isSelected = selectedHistoryPhotoIds.includes(photo.id);
         item.className = `history-item${isFocused ? ' focused' : ''}${isSelected ? ' selected' : ''}`;
         item.dataset.photoId = photo.id;
-        const thumbSrc = photo.renderedDataUrl || photo.dataUrl;
+        // Prefer the small JPEG thumbnail to avoid decoding a full-res PNG
+        // for every history item on every render.
+        const thumbSrc = photo.thumbUrl || photo.renderedDataUrl || photo.dataUrl;
         item.innerHTML = `
             <span class="history-item-toggle" data-toggle-photo-id="${photo.id}" aria-label="${isSelected ? 'Bo chon anh' : 'Chon anh de ghep'}">${isSelected ? icons.check : icons.add}</span>
             <img src="${thumbSrc}" alt="${photo.label}">
@@ -116,10 +118,11 @@ function closeHistoryDrawer() {
     updateOverlayBackdrop();
 }
 
-function pushCapturedPhoto(dataUrl) {
+function pushCapturedPhoto(dataUrl, thumbUrl) {
     const entry = {
         id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         dataUrl,
+        thumbUrl: thumbUrl || dataUrl,
         createdAt: Date.now(),
         label: `Ảnh ${capturedPhotos.length + 1}`
     };
@@ -130,6 +133,11 @@ function pushCapturedPhoto(dataUrl) {
     }
     selectedHistoryPhotoId = entry.id;
     selectedHistoryPhotoIds = [entry.id];
-    renderHistoryDrawer();
+    // Only touch the DOM if the drawer is actually visible. Otherwise rebuilding
+    // the list forces the browser to decode every stored photo on every capture,
+    // which compounds into progressive lag in the camera loop.
+    if (historyDrawerEl.classList.contains('visible')) {
+        renderHistoryDrawer();
+    }
 }
 

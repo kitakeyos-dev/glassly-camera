@@ -96,7 +96,10 @@ function clamp(value, min, max) {
 }
 
 function loadImageCached(src) {
-    if (imageCache.has(src)) return imageCache.get(src);
+    // Never cache data: URLs. Each captured photo produces a unique base64 string,
+    // so caching them would leak memory forever as the user keeps shooting.
+    const cacheable = typeof src === 'string' && !src.startsWith('data:');
+    if (cacheable && imageCache.has(src)) return imageCache.get(src);
 
     const imagePromise = new Promise((resolve, reject) => {
         const img = new Image();
@@ -105,7 +108,7 @@ function loadImageCached(src) {
         img.src = src;
     });
 
-    imageCache.set(src, imagePromise);
+    if (cacheable) imageCache.set(src, imagePromise);
     return imagePromise;
 }
 
