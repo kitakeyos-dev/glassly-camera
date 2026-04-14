@@ -4,6 +4,110 @@ function getEditorSelectedSticker() {
     return editorState.activeStickers.find(sticker => sticker.id === editorState.selectedStickerId) || null;
 }
 
+// Serialize the reversible parts of editorState into a plain object.
+function snapshotEditorState() {
+    return {
+        selectedPhotoIds: [...editorState.selectedPhotoIds],
+        collageLayout: editorState.collageLayout,
+        frameStyle: editorState.frameStyle,
+        activeStickers: editorState.activeStickers.map(s => ({
+            id: s.id,
+            label: s.label,
+            src: s.src,
+            width: s.width,
+            height: s.height,
+            x: s.x,
+            y: s.y,
+            scale: s.scale,
+            rotation: s.rotation,
+            flipX: s.flipX,
+            flipY: s.flipY,
+            renderCanvasData: s.renderCanvas ? s.renderCanvas.toDataURL('image/png') : null
+        })),
+        selectedStickerId: editorState.selectedStickerId
+    };
+}
+
+function pushEditorHistory() {
+    if (!editorState.isOpen) return;
+    // Drop any forward history when a new action branches off.
+    editorState.historyStack.length = editorState.historyIndex + 1;
+    editorState.historyStack.push(snapshotEditorState());
+    if (editorState.historyStack.length > EDITOR_HISTORY_MAX) {
+        editorState.historyStack.shift();
+    }
+    editorState.historyIndex = editorState.historyStack.length - 1;
+    updateHistoryButtons();
+}
+
+async function restoreEditorSnapshot(snapshot) {
+    editorState.selectedPhotoIds = [...snapshot.selectedPhotoIds];
+    editorState.collageLayout = snapshot.collageLayout;
+    editorState.frameStyle = snapshot.frameStyle;
+
+    editorState.activeStickers = await Promise.all(snapshot.activeStickers.map(async data => {
+        const sticker = {
+            id: data.id,
+            label: data.label,
+            src: data.src,
+            width: data.width,
+            height: data.height,
+            x: data.x,
+            y: data.y,
+            scale: data.scale,
+            rotation: data.rotation,
+            flipX: data.flipX,
+            flipY: data.flipY
+        };
+        if (data.renderCanvasData) {
+            try {
+                const img = await loadImageCached(data.renderCanvasData);
+                const surface = createStickerRenderSurface(img, data.width, data.height);
+                sticker.renderCanvas = surface.renderCanvas;
+                sticker.renderCtx = surface.renderCtx;
+            } catch (e) {
+                const fallback = await loadImageCached(data.src);
+                const surface = createStickerRenderSurface(fallback, data.width, data.height);
+                sticker.renderCanvas = surface.renderCanvas;
+                sticker.renderCtx = surface.renderCtx;
+            }
+        }
+        return sticker;
+    }));
+
+    editorState.selectedStickerId = snapshot.selectedStickerId || null;
+    editorState.dragStickerId = null;
+    editorState.erasingStickerId = null;
+    editorState.eraseLastPoint = null;
+    editorState.eraserEnabled = false;
+
+    renderEditorPanels();
+    renderEditorCanvas();
+}
+
+function canEditorUndo() { return editorState.historyIndex > 0; }
+function canEditorRedo() { return editorState.historyIndex < editorState.historyStack.length - 1; }
+
+function updateHistoryButtons() {
+    if (!editorUndoBtnEl || !editorRedoBtnEl) return;
+    editorUndoBtnEl.disabled = !canEditorUndo();
+    editorRedoBtnEl.disabled = !canEditorRedo();
+}
+
+async function editorUndo() {
+    if (!canEditorUndo()) return;
+    editorState.historyIndex -= 1;
+    await restoreEditorSnapshot(editorState.historyStack[editorState.historyIndex]);
+    updateHistoryButtons();
+}
+
+async function editorRedo() {
+    if (!canEditorRedo()) return;
+    editorState.historyIndex += 1;
+    await restoreEditorSnapshot(editorState.historyStack[editorState.historyIndex]);
+    updateHistoryButtons();
+}
+
 function createStickerRenderSurface(img, width, height) {
     const renderCanvas = document.createElement('canvas');
     renderCanvas.width = Math.max(1, Math.round(width));
@@ -182,6 +286,7 @@ function handleStickerToolbarAction(actionId) {
     }
     syncStickerControls();
     renderEditorCanvas();
+    pushEditorHistory();
 }
 
 function syncStickerControls() {
@@ -316,12 +421,15 @@ function openEditorFromHistory() {
     editorState.erasingStickerId = null;
     editorState.eraseLastPoint = null;
     editorState.eraserCursorVisible = false;
+    editorState.historyStack = [];
+    editorState.historyIndex = -1;
     stickerSearchInputEl.value = '';
 
     editorOverlayEl.classList.add('visible');
     editorOverlayEl.setAttribute('aria-hidden', 'false');
     renderEditorPanels();
     renderEditorCanvas();
+    pushEditorHistory();
 }
 
 function toggleEditorPhotoSelection(photoId) {
@@ -373,6 +481,7 @@ async function addStickerToEditor(stickerId) {
     editorState.selectedStickerId = sticker.id;
     syncStickerControls();
     renderEditorCanvas();
+    pushEditorHistory();
 }
 
 function getEditorCanvasPoint(event) {
@@ -626,6 +735,7 @@ async function exportEditorImage() {
 }
 
 function stopStickerDrag(pointerId) {
+    const wasInteracting = !!(editorState.dragStickerId || editorState.erasingStickerId);
     editorState.dragStickerId = null;
     editorState.erasingStickerId = null;
     editorState.eraseLastPoint = null;
@@ -635,4 +745,5 @@ function stopStickerDrag(pointerId) {
     } catch (error) {
         // ignore capture release failures
     }
+    if (wasInteracting) pushEditorHistory();
 }

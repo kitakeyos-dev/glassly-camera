@@ -32,9 +32,13 @@ const STICKER_LIBRARY = [
     label: name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
     src: `assets/stickers/${encodeURIComponent(name)}`
 }));
+const EDITOR_HISTORY_MAX = 25;
+
 const editorState = {
     isOpen: false,
     activeTab: null,
+    historyStack: [],
+    historyIndex: -1,
     selectedPhotoIds: [],
     collageLayout: 'single',
     frameStyle: 'classic',

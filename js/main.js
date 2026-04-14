@@ -178,33 +178,53 @@ document.addEventListener('click', event => {
     toggleModeMenu(false);
 });
 document.addEventListener('keydown', event => {
-    if (event.key !== 'Escape') return;
-    toggleModeMenu(false);
-    closeHistoryDrawer();
-    closeResearchModal();
-    closeEditor();
-    closeHelpSheet();
+    if (event.key === 'Escape') {
+        toggleModeMenu(false);
+        closeHistoryDrawer();
+        closeResearchModal();
+        closeEditor();
+        closeHelpSheet();
+        return;
+    }
+    if (!editorState.isOpen) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) editorRedo();
+        else editorUndo();
+        return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        editorRedo();
+    }
 });
 editorCloseBtnEl.addEventListener('click', closeEditor);
 editorDownloadBtnEl.addEventListener('click', exportEditorImage);
+editorUndoBtnEl.addEventListener('click', () => { editorUndo(); });
+editorRedoBtnEl.addEventListener('click', () => { editorRedo(); });
 editorLayoutOptionsEl.addEventListener('click', event => {
     const button = event.target.closest('[data-layout-id]');
     if (!button) return;
+    if (editorState.collageLayout === button.dataset.layoutId) return;
     editorState.collageLayout = button.dataset.layoutId;
     renderEditorLayoutOptions();
     renderEditorCanvas();
+    pushEditorHistory();
 });
 editorFrameOptionsEl.addEventListener('click', event => {
     const button = event.target.closest('[data-frame-id]');
     if (!button) return;
+    if (editorState.frameStyle === button.dataset.frameId) return;
     editorState.frameStyle = button.dataset.frameId;
     renderEditorFrameOptions();
     renderEditorCanvas();
+    pushEditorHistory();
 });
 editorPhotoPickerEl.addEventListener('click', event => {
     const button = event.target.closest('[data-photo-id]');
     if (!button) return;
     toggleEditorPhotoSelection(button.dataset.photoId);
+    pushEditorHistory();
 });
 stickerSearchInputEl.addEventListener('input', event => {
     editorState.stickerSearch = event.target.value;
