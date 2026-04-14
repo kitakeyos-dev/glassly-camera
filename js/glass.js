@@ -13,6 +13,23 @@ function buildPath(glass) {
         ctx.lineTo(glass.bl.x, glass.bl.y);
     } else if (glass.type === 'circle') {
         ctx.ellipse(glass.cx, glass.cy, glass.rx, glass.ry, glass.angle, 0, Math.PI * 2);
+    } else if (glass.type === 'heart') {
+        const { cx, cy, rx: w, ry: h } = glass;
+        // Heart path via 2 bezier curves, cx/cy = visual center of heart.
+        // Top dip sits above cy, bottom tip sits below cy.
+        const topDipY   = cy - h * 0.25;
+        const bottomY   = cy + h * 0.9;
+        ctx.moveTo(cx, topDipY);
+        ctx.bezierCurveTo(
+            cx + w * 0.95, cy - h * 1.05,
+            cx + w * 1.2,  cy + h * 0.25,
+            cx,            bottomY
+        );
+        ctx.bezierCurveTo(
+            cx - w * 1.2,  cy + h * 0.25,
+            cx - w * 0.95, cy - h * 1.05,
+            cx,            topDipY
+        );
     }
     ctx.closePath();
 }
@@ -127,6 +144,9 @@ function drawProgressRing(glass, progress) {
         cx = glass.cx; cy = glass.cy;
         const pts = [glass.p1, glass.p2, glass.p3];
         rx = ry = Math.max(...pts.map(p => Math.hypot(p.x - cx, p.y - cy))) * 1.2;
+    } else if (glass.type === 'heart') {
+        cx = glass.cx; cy = glass.cy;
+        rx = ry = Math.max(glass.rx, glass.ry) * 1.45;
     } else {
         cx = glass.cx; cy = glass.cy;
         const pts = [glass.tl, glass.tr, glass.br, glass.bl];

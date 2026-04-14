@@ -33,6 +33,27 @@ function onResults(results) {
             };
             gestureName = 'TAM GIÁC';
         }
+        // Finger heart: cái + trỏ đan chéo thành X (1 tay)
+        else if (checkFingerHeartGesture(hand1)) {
+            const wrist      = { x: hand1[0].x * w, y: hand1[0].y * h };
+            const middleBase = { x: hand1[9].x * w, y: hand1[9].y * h };
+            const thumbTip   = { x: hand1[4].x * w, y: hand1[4].y * h };
+            const indexTip   = { x: hand1[8].x * w, y: hand1[8].y * h };
+            const handSize   = Math.hypot(middleBase.x - wrist.x, middleBase.y - wrist.y);
+            // Giao điểm đan chéo ≈ trung điểm 2 đầu ngón cái + trỏ → đáy trái tim.
+            const bottomX = (thumbTip.x + indexTip.x) / 2;
+            const bottomY = (thumbTip.y + indexTip.y) / 2;
+            const size = handSize * 0.95;
+            currentGestureData = {
+                type: 'heart',
+                // cx / cy = tâm hình học của heart, được tính từ bottomY.
+                cx: bottomX,
+                cy: bottomY - size * 0.9,
+                rx: size,
+                ry: size,
+            };
+            gestureName = 'TRÁI TIM';
+        }
 
         if (results.multiHandLandmarks.length === 2) {
             const hand2     = results.multiHandLandmarks[1];

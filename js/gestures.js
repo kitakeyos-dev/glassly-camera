@@ -26,6 +26,25 @@ function checkLFrameGesture(lm) {
            !isFingerExtended(lm, 20, 18);
 }
 
+// Finger heart (1 tay): ngón cái + trỏ đan chéo thành hình X, 3 ngón còn lại gập.
+function checkFingerHeartGesture(lm) {
+    if (isFingerExtended(lm, 12, 10)) return false;
+    if (isFingerExtended(lm, 16, 14)) return false;
+    if (isFingerExtended(lm, 20, 18)) return false;
+
+    const wrist      = lm[0];
+    const middleBase = lm[9];
+    const handSize   = Math.hypot(middleBase.x - wrist.x, middleBase.y - wrist.y);
+    if (handSize < 1e-4) return false;
+
+    const thumbTip = lm[4];
+    const indexTip = lm[8];
+    const distTips = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+
+    // Cái + trỏ phải gần nhau (đan chéo), nhưng không quá xa so với scale bàn tay.
+    return distTips < handSize * 0.9;
+}
+
 // Vòng tròn kéo dãn: cái (4) + trỏ (8) + út (20), 2 tay
 function checkStretchCircleGesture(h1, h2) {
     return  isFingerExtended(h1,  4,  3) && isFingerExtended(h2,  4,  3) &&
