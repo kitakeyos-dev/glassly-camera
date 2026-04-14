@@ -1,0 +1,203 @@
+// Event bindings and startup
+
+canvasEl.addEventListener('click', () => {
+    if (!frozenGlass && !isCooldown) return;
+    frozenGlass = null;
+    activeGlass = null;
+    lastPos = null;
+    snapTimer = 0;
+    isCooldown = false;
+    updateGestureTag(null);
+    hudEl.classList.remove('hidden');
+});
+
+document.addEventListener('keydown', e => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    saveCurrentFrame();
+});
+
+captureBtnEl.addEventListener('click', saveCurrentFrame);
+menuBtnEl.addEventListener('click', event => {
+    event.stopPropagation();
+    toggleModeMenu();
+});
+historyModeBtnEl.addEventListener('click', openHistoryDrawer);
+photobookModeBtnEl.addEventListener('click', openResearchModal);
+historyCloseBtnEl.addEventListener('click', closeHistoryDrawer);
+researchCloseBtnEl.addEventListener('click', closeResearchModal);
+overlayBackdropEl.addEventListener('click', () => {
+    toggleModeMenu(false);
+    closeHistoryDrawer();
+    closeResearchModal();
+});
+historyListEl.addEventListener('click', event => {
+    const toggle = event.target.closest('[data-toggle-photo-id]');
+    if (toggle) {
+        toggleHistoryPhotoSelection(toggle.dataset.togglePhotoId);
+        return;
+    }
+
+    const item = event.target.closest('.history-item');
+    if (!item) return;
+    selectedHistoryPhotoId = item.dataset.photoId;
+    renderHistoryDrawer();
+});
+historyDownloadBtnEl.addEventListener('click', () => {
+    const photo = getSelectedHistoryPhoto();
+    if (!photo) return;
+    downloadDataUrl(photo.dataUrl, `${photo.id}.png`);
+    showToast('Đã tải lại ảnh đã chọn!');
+});
+historyEditBtnEl.addEventListener('click', openEditorFromHistory);
+historyClearSelectionBtnEl.addEventListener('click', clearHistoryPhotoSelection);
+document.addEventListener('click', event => {
+    if (!modeMenuEl.classList.contains('visible')) return;
+    if (modeMenuEl.contains(event.target) || menuBtnEl.contains(event.target)) return;
+    toggleModeMenu(false);
+});
+document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    toggleModeMenu(false);
+    closeHistoryDrawer();
+    closeResearchModal();
+    closeEditor();
+});
+editorCloseBtnEl.addEventListener('click', closeEditor);
+editorDownloadBtnEl.addEventListener('click', exportEditorImage);
+editorLayoutOptionsEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-layout-id]');
+    if (!button) return;
+    editorState.collageLayout = button.dataset.layoutId;
+    renderEditorLayoutOptions();
+    renderEditorCanvas();
+});
+editorFrameOptionsEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-frame-id]');
+    if (!button) return;
+    editorState.frameStyle = button.dataset.frameId;
+    renderEditorFrameOptions();
+    renderEditorCanvas();
+});
+editorPhotoPickerEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-photo-id]');
+    if (!button) return;
+    toggleEditorPhotoSelection(button.dataset.photoId);
+});
+stickerSearchInputEl.addEventListener('input', event => {
+    editorState.stickerSearch = event.target.value;
+    renderStickerLibrary();
+});
+stickerListEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-sticker-id]');
+    if (!button) return;
+    addStickerToEditor(button.dataset.stickerId);
+});
+editorTabbarEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-editor-tab]');
+    if (!button) return;
+    openEditorTab(button.dataset.editorTab);
+});
+bottomSheetCloseBtnEl.addEventListener('click', closeEditorSheet);
+stickerToolbarEl.addEventListener('click', event => {
+    const button = event.target.closest('[data-sticker-action]');
+    if (!button) return;
+    handleStickerToolbarAction(button.dataset.stickerAction);
+});
+editorCanvasEl.addEventListener('pointerdown', event => {
+    if (!editorState.isOpen) return;
+    const point = getEditorCanvasPoint(event);
+    updateEraserCursor(point);
+    const sticker = findStickerAtPoint(point.x, point.y);
+
+    if (editorState.eraserEnabled) {
+        const targetSticker = sticker || getEditorSelectedSticker();
+        if (!targetSticker) {
+            editorState.selectedStickerId = null;
+            editorState.erasingStickerId = null;
+            renderEditorCanvas();
+            return;
+        }
+
+        editorState.selectedStickerId = targetSticker.id;
+        editorState.erasingStickerId = targetSticker.id;
+        editorState.eraseLastPoint = point;
+        eraseStickerStroke(targetSticker, point, point);
+        editorCanvasEl.setPointerCapture(event.pointerId);
+        renderEditorCanvas();
+        return;
+    }
+
+    if (!sticker) {
+        editorState.selectedStickerId = null;
+        renderEditorCanvas();
+        return;
+    }
+
+    editorState.selectedStickerId = sticker.id;
+    editorState.dragStickerId = sticker.id;
+    editorState.dragOffsetX = point.x - sticker.x;
+    editorState.dragOffsetY = point.y - sticker.y;
+    editorCanvasEl.setPointerCapture(event.pointerId);
+    editorCanvasEl.classList.add('dragging');
+    renderEditorCanvas();
+});
+editorCanvasEl.addEventListener('pointermove', event => {
+    const point = getEditorCanvasPoint(event);
+    if (editorState.eraserEnabled) {
+        updateEraserCursor(point);
+    }
+
+    if (editorState.erasingStickerId) {
+        const sticker = getEditorSelectedSticker();
+        if (!sticker) return;
+        eraseStickerStroke(sticker, editorState.eraseLastPoint || point, point);
+        editorState.eraseLastPoint = point;
+        renderEditorCanvas();
+        return;
+    }
+
+    if (editorState.eraserEnabled) {
+        renderEditorCanvas();
+        return;
+    }
+
+    if (!editorState.dragStickerId) return;
+    const sticker = getEditorSelectedSticker();
+    if (!sticker) return;
+    sticker.x = clamp(point.x - editorState.dragOffsetX, 0, editorCanvasEl.width);
+    sticker.y = clamp(point.y - editorState.dragOffsetY, 0, editorCanvasEl.height);
+    renderEditorCanvas();
+});
+
+editorCanvasEl.addEventListener('pointerup', event => stopStickerDrag(event.pointerId));
+editorCanvasEl.addEventListener('pointercancel', event => stopStickerDrag(event.pointerId));
+editorCanvasEl.addEventListener('pointerenter', event => {
+    if (!editorState.eraserEnabled) return;
+    updateEraserCursor(getEditorCanvasPoint(event));
+    renderEditorCanvas();
+});
+editorCanvasEl.addEventListener('pointerleave', () => {
+    if (!editorState.eraserEnabled) return;
+    editorState.eraserCursorVisible = false;
+    if (!editorState.erasingStickerId) {
+        renderEditorCanvas();
+    }
+});
+editorCanvasEl.addEventListener('wheel', event => {
+    if (!editorState.isOpen) return;
+    const sticker = getEditorSelectedSticker();
+    if (!sticker) return;
+    event.preventDefault();
+
+    if (event.shiftKey) {
+        sticker.rotation += event.deltaY < 0 ? 0.06 : -0.06;
+    } else {
+        const nextScale = sticker.scale * (event.deltaY < 0 ? 1.05 : 0.95);
+        sticker.scale = clamp(nextScale, 0.4, 2.2);
+    }
+
+    renderEditorCanvas();
+}, { passive: false });
+
+startCamera().catch(() => {});

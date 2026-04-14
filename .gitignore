@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / tool state
+.vscode/
+.idea/
+.claude/
+
+# Node (future build tooling)
+node_modules/
+dist/

@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Glass Effects</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="loading">
+    <div class="spinner"></div>
+    <h2>Khởi động nhận diện tay...</h2>
+</div>
+
+<div id="error-screen">
+    <div class="icon"><svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg></div>
+    <h2>Không thể truy cập Camera</h2>
+    <p>Vui lòng cho phép truy cập camera trong cài đặt trình duyệt rồi tải lại trang.</p>
+</div>
+
+<button id="menu-btn" type="button" aria-label="Mo menu che do">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+
+<div id="mode-menu" aria-hidden="true">
+    <div class="menu-title">Danh sách chế độ</div>
+    <button class="menu-item" id="history-mode-btn" type="button">
+        <strong>Lịch sử ảnh chụp</strong>
+        <small>Xem 10 ảnh gần nhất, chọn lại ảnh cần chỉnh sửa ở bước tiếp theo.</small>
+    </button>
+    <button class="menu-item" id="photobook-mode-btn" type="button">
+        <strong>Khung ảnh Photobook</strong>
+        <small>Hiện đang trong quá trình nghiên cứu.</small>
+    </button>
+</div>
+
+<div id="overlay-backdrop" aria-hidden="true"></div>
+
+<aside id="history-drawer" aria-hidden="true">
+    <div class="drawer-header">
+        <div>
+            <h3>Lịch sử ảnh chụp</h3>
+            <p>Tự lưu 10 ảnh gần nhất mỗi khi bạn chụp hoặc lưu ảnh.</p>
+        </div>
+        <button class="drawer-close" id="history-close-btn" type="button" aria-label="Dong lich su"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="drawer-content">
+        <div id="history-empty">Chưa có ảnh nào trong lịch sử. Hãy chụp một tấm ảnh trước, ảnh sẽ tự xuất hiện ở đây.</div>
+        <div id="history-preview">
+            <img id="history-preview-image" alt="Anh lich su da chon">
+            <div class="history-preview-meta">
+                <strong id="history-preview-title">Ảnh gần đây</strong>
+                <span id="history-preview-time"></span>
+                <div id="history-selection-count" class="history-selection-count"></div>
+                <div class="history-actions">
+                    <button class="history-action primary" id="history-download-btn" type="button">Tải xuống</button>
+                    <button class="history-action secondary" id="history-edit-btn" type="button">Mở chỉnh sửa</button>
+                    <button class="history-action secondary" id="history-clear-selection-btn" type="button">Bỏ chọn ảnh ghép</button>
+                </div>
+                <div class="history-note">Bấm vào thumbnail để xem ảnh. Bấm nút dấu cộng hoặc dấu tích trên từng ô để chọn tối đa 4 ảnh ghép trước khi mở editor.</div>
+            </div>
+        </div>
+        <div id="history-list"></div>
+    </div>
+</aside>
+
+<div id="research-modal" aria-hidden="true">
+    <div class="research-card">
+        <h3>Khung ảnh Photobook</h3>
+        <p>Hiện đang trong quá trình nghiên cứu. Ở bước sau tôi sẽ nối phần chọn khung PNG trong thư mục <code>khungphotobook</code> và luồng chụp nhiều tấm.</p>
+        <button id="research-close-btn" type="button">Đóng</button>
+    </div>
+</div>
+
+<section id="editor-overlay" aria-hidden="true">
+    <div class="editor-shell">
+        <header class="editor-topbar">
+            <button id="editor-close-btn" class="editor-icon-btn" type="button" aria-label="Dong man hinh chinh sua"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <h3 class="editor-title">Chỉnh sửa ảnh</h3>
+            <button id="editor-download-btn" class="editor-save-btn" type="button">Lưu</button>
+        </header>
+
+        <div class="editor-stage-wrap">
+            <canvas id="editor-canvas" width="1080" height="1350"></canvas>
+            <div id="editor-sticker-toolbar" class="editor-sticker-toolbar" aria-hidden="true"></div>
+            <div id="editor-selection-note" class="editor-selection-note">Chọn ảnh trong tab <strong>Ảnh</strong>, đổi bố cục, khung, thêm sticker ở các tab bên dưới.</div>
+        </div>
+
+        <nav class="editor-tabbar" role="tablist">
+            <button class="editor-tab" type="button" role="tab" data-editor-tab="photo" aria-selected="false"></button>
+            <button class="editor-tab" type="button" role="tab" data-editor-tab="layout" aria-selected="false"></button>
+            <button class="editor-tab" type="button" role="tab" data-editor-tab="frame" aria-selected="false"></button>
+            <button class="editor-tab" type="button" role="tab" data-editor-tab="sticker" aria-selected="false"></button>
+        </nav>
+
+        <div id="editor-bottom-sheet" class="editor-bottom-sheet" aria-hidden="true">
+            <div class="bottom-sheet-header">
+                <span class="bottom-sheet-handle"></span>
+                <h4 class="bottom-sheet-title"></h4>
+                <button class="bottom-sheet-close editor-icon-btn" type="button" aria-label="Dong"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="bottom-sheet-body">
+                <div class="editor-tab-panel" data-panel="photo">
+                    <div class="editor-helper">Chọn tối đa 4 ảnh từ lịch sử.</div>
+                    <div id="editor-photo-picker" class="editor-photo-picker"></div>
+                </div>
+                <div class="editor-tab-panel" data-panel="layout">
+                    <div class="editor-helper">Bố cục ghép ảnh.</div>
+                    <div id="editor-layout-options" class="editor-option-row"></div>
+                </div>
+                <div class="editor-tab-panel" data-panel="frame">
+                    <div class="editor-helper">Khung viền ảnh.</div>
+                    <div id="editor-frame-options" class="editor-option-row"></div>
+                </div>
+                <div class="editor-tab-panel" data-panel="sticker">
+                    <input id="sticker-search-input" class="editor-search" type="search" placeholder="Tìm sticker...">
+                    <div id="sticker-list" class="sticker-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="video-container">
+    <video class="input_video" autoplay playsinline></video>
+    <canvas class="output_canvas" width="1280" height="720"></canvas>
+</div>
+
+<div id="hud">
+    <div class="gesture-card">
+        <span class="emoji"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 4 L3 20 L21 20 Z"/></svg></span>
+        <span class="label"><b>Tam giác</b>1 tay: cái + trỏ + giữa</span>
+    </div>
+    <div class="gesture-card">
+        <span class="emoji"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="10" rx="1.5"/></svg></span>
+        <span class="label"><b>L-Frame</b>2 tay → Tứ giác 3D</span>
+    </div>
+    <div class="gesture-card">
+        <span class="emoji"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg></span>
+        <span class="label"><b>Vòng tròn</b>2 tay: cái + trỏ + út, kéo dãn</span>
+    </div>
+</div>
+
+<div id="gesture-tag"></div>
+<div id="save-toast"></div>
+<button id="capture-btn" type="button" aria-label="Chup va luu anh">
+    <img src="assets/icons/camerabutton.png" alt="">
+    <span class="capture-fallback" aria-hidden="true"><svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg></span>
+</button>
+<div id="clear-hint">Nhấn màn hình để xóa<br>Nút camera bên phải hoặc [Space] để chụp & lưu</div>
+
+<script defer src="js/icons.js"></script>
+<script defer src="js/config.js"></script>
+<script defer src="js/dom.js"></script>
+<script defer src="js/state.js"></script>
+<script defer src="js/utils.js"></script>
+<script defer src="js/history.js"></script>
+<script defer src="js/editor.js"></script>
+<script defer src="js/glass.js"></script>
+<script defer src="js/gestures.js"></script>
+<script defer src="js/capture.js"></script>
+<script defer src="js/camera.js"></script>
+<script defer src="js/main.js"></script>
+</body>
+</html>
+
