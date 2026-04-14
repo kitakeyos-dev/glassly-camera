@@ -52,6 +52,70 @@ function runCountdownCapture() {
     setTimeout(tick, 1000);
 }
 
+async function handleHistoryUpload(file) {
+    if (!file) return;
+    try {
+        const bitmap = await createImageBitmap(file);
+        const maxSide = 1280;
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const w = Math.round(bitmap.width * scale);
+        const h = Math.round(bitmap.height * scale);
+        const cvs = document.createElement('canvas');
+        cvs.width = w;
+        cvs.height = h;
+        const c = cvs.getContext('2d');
+        c.imageSmoothingQuality = 'high';
+        c.drawImage(bitmap, 0, 0, w, h);
+        const dataUrl = cvs.toDataURL('image/jpeg', 0.88);
+        pushCapturedPhoto(dataUrl);
+        showToast('Đã thêm ảnh!');
+    } catch (error) {
+        showToast('Không đọc được ảnh.', 2400);
+    }
+}
+
+async function addCustomUploadSticker(file) {
+    if (!file) return;
+    try {
+        const bitmap = await createImageBitmap(file);
+
+        const raw = document.createElement('canvas');
+        raw.width = bitmap.width;
+        raw.height = bitmap.height;
+        raw.getContext('2d').drawImage(bitmap, 0, 0);
+        const dataUrl = raw.toDataURL('image/png');
+
+        const longestSide = Math.max(bitmap.width, bitmap.height);
+        const fitRatio = 320 / Math.max(1, longestSide);
+        const sticker = {
+            id: `user-sticker-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            label: file.name || 'Ảnh upload',
+            src: dataUrl,
+            kind: 'image',
+            width: Math.round(bitmap.width * fitRatio),
+            height: Math.round(bitmap.height * fitRatio),
+            x: editorCanvasEl.width / 2,
+            y: editorCanvasEl.height / 2,
+            scale: 1,
+            rotation: 0,
+            flipX: 1,
+            flipY: 1
+        };
+        const surface = createStickerRenderSurface(bitmap, sticker.width, sticker.height);
+        sticker.renderCanvas = surface.renderCanvas;
+        sticker.renderCtx = surface.renderCtx;
+
+        editorState.activeStickers.push(sticker);
+        editorState.selectedStickerId = sticker.id;
+        syncStickerControls();
+        renderEditorCanvas();
+        pushEditorHistory();
+        showToast('Đã thêm ảnh vào editor.');
+    } catch (error) {
+        showToast('Không đọc được ảnh.', 2400);
+    }
+}
+
 async function shareCurrentFrame(photo) {
     try {
         const res = await fetch(photo.dataUrl);

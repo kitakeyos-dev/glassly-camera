@@ -110,6 +110,7 @@ body, html {
 }
 .output_canvas.no-mirror { transform: none; }
 
+
 #countdown-overlay {
     position: fixed;
     inset: 0;
@@ -1339,6 +1340,25 @@ body, html {
 .text-add-btn:active {
     transform: translateY(1px) scale(0.98);
 }
+
+.sticker-upload-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px dashed rgba(255,255,255,0.25);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.sticker-upload-btn:active { background: rgba(255,255,255,0.1); }
+.sticker-upload-btn .svg-icon { font-size: 1.1rem; color: var(--accent); }
 
 @media (max-width: 900px) {
     #gesture-tag {

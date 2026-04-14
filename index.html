@@ -50,6 +50,7 @@
             <h3>Lịch sử ảnh chụp</h3>
             <p>Tự lưu 10 ảnh gần nhất mỗi khi bạn chụp hoặc lưu ảnh.</p>
         </div>
+        <button class="drawer-close" id="history-upload-btn" type="button" aria-label="Tai anh len"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
         <button class="drawer-close" id="history-close-btn" type="button" aria-label="Dong lich su"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="drawer-content">
@@ -127,6 +128,10 @@
                     <div id="editor-frame-options" class="editor-option-row"></div>
                 </div>
                 <div class="editor-tab-panel" data-panel="sticker">
+                    <button id="sticker-upload-btn" class="sticker-upload-btn" type="button">
+                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Tải ảnh từ máy
+                    </button>
                     <input id="sticker-search-input" class="editor-search" type="search" placeholder="Tìm sticker...">
                     <div id="sticker-list" class="sticker-grid"></div>
                 </div>
@@ -159,6 +164,9 @@
 <div id="gesture-tag"></div>
 <div id="save-toast"></div>
 <div id="countdown-overlay" aria-hidden="true"></div>
+
+<input id="upload-history-input" type="file" accept="image/*" hidden>
+<input id="upload-custom-sticker-input" type="file" accept="image/*" hidden>
 
 <button id="switch-camera-btn" type="button" aria-label="Chuyen camera truoc sau">
     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>

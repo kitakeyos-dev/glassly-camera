@@ -22,6 +22,21 @@ helpBtnEl.addEventListener('click', openHelpSheet);
 helpCloseBtnEl.addEventListener('click', closeHelpSheet);
 historyShortcutBtnEl.addEventListener('click', openHistoryDrawer);
 
+historyUploadBtnEl.addEventListener('click', () => uploadHistoryInputEl.click());
+uploadHistoryInputEl.addEventListener('change', async event => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    await handleHistoryUpload(file);
+});
+
+
+stickerUploadBtnEl.addEventListener('click', () => uploadCustomStickerInputEl.click());
+uploadCustomStickerInputEl.addEventListener('change', async event => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    await addCustomUploadSticker(file);
+});
+
 document.addEventListener('keydown', e => {
     if (e.code !== 'Space') return;
     e.preventDefault();
