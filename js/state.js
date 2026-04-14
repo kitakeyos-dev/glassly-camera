@@ -9,6 +9,7 @@ let flashFrames  = 0;
 let lastGesture  = null;
 let currentMode = 'glasses';
 let currentCameraFilter = 'none';
+let countdownDuration = 3;
 let capturedPhotos = [];
 let selectedHistoryPhotoId = null;
 let selectedHistoryPhotoIds = [];

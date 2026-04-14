@@ -24,17 +24,24 @@ function saveCurrentFrame() {
 
 function runCountdownCapture() {
     if (countdownActive) return;
+    if (!countdownDuration || countdownDuration <= 0) {
+        saveCurrentFrame();
+        return;
+    }
     countdownActive = true;
-    let remaining = 3;
+    let remaining = countdownDuration;
+    const showNumber = value => {
+        countdownOverlayEl.textContent = String(value);
+        countdownOverlayEl.classList.remove('pulse');
+        void countdownOverlayEl.offsetWidth;
+        countdownOverlayEl.classList.add('pulse');
+    };
     countdownOverlayEl.classList.add('visible');
-    countdownOverlayEl.textContent = String(remaining);
+    showNumber(remaining);
     const tick = () => {
         remaining -= 1;
         if (remaining > 0) {
-            countdownOverlayEl.textContent = String(remaining);
-            countdownOverlayEl.classList.remove('pulse');
-            void countdownOverlayEl.offsetWidth;
-            countdownOverlayEl.classList.add('pulse');
+            showNumber(remaining);
             setTimeout(tick, 1000);
         } else {
             countdownOverlayEl.classList.remove('visible', 'pulse');
@@ -42,9 +49,6 @@ function runCountdownCapture() {
             saveCurrentFrame();
         }
     };
-    countdownOverlayEl.classList.remove('pulse');
-    void countdownOverlayEl.offsetWidth;
-    countdownOverlayEl.classList.add('pulse');
     setTimeout(tick, 1000);
 }
 

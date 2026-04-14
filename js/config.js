@@ -77,6 +77,8 @@ const STABILITY_THRESHOLD = 80;
 const MAX_CAPTURE_HISTORY = 10;
 const DEFAULT_SAVE_TOAST  = 'Đã lưu ảnh!';
 
+const COUNTDOWN_OPTIONS = [0, 3, 5, 10];
+
 const CAMERA_FILTERS = [
     { id: 'none',    label: 'Gốc',    css: 'none' },
     { id: 'bw',      label: 'Trắng đen', css: 'grayscale(1) contrast(1.12)' },

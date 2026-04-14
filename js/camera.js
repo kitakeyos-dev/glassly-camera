@@ -140,8 +140,6 @@ function onResults(results) {
                         snapTimer       = 0;
                         currentProgress = 0;
                         flashFrames     = 10;
-                        // Hands-free: tự lưu sau khi frame đã vẽ frozen glass (~200ms để flash bắt đầu)
-                        setTimeout(() => saveCurrentFrame(), 220);
                     }
                 } else {
                     snapTimer = 0;

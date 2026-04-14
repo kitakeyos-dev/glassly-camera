@@ -53,19 +53,6 @@ function drawGlass3D(liveImage, glass, progress) {
     const isSnapped = progress >= 1;
     ctx.save();
 
-    // Drop shadow (khi đã chụp)
-    if (isSnapped) {
-        buildPath(glass);
-        ctx.save();
-        ctx.shadowColor   = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur    = 40;
-        ctx.shadowOffsetX = 18;
-        ctx.shadowOffsetY = 18;
-        ctx.fillStyle = 'black';
-        ctx.fill();
-        ctx.restore();
-    }
-
     // Clip vùng hình
     buildPath(glass);
     ctx.clip();

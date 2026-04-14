@@ -28,6 +28,18 @@ document.addEventListener('keydown', e => {
     saveCurrentFrame();
 });
 
+// Countdown timer toggle (cycles 0/3/5/10 seconds)
+function updateTimerToggleLabel() {
+    timerToggleLabelEl.textContent = countdownDuration > 0 ? `${countdownDuration}s` : 'Off';
+    timerToggleEl.classList.toggle('off', countdownDuration === 0);
+}
+updateTimerToggleLabel();
+timerToggleEl.addEventListener('click', () => {
+    const idx = COUNTDOWN_OPTIONS.indexOf(countdownDuration);
+    countdownDuration = COUNTDOWN_OPTIONS[(idx + 1) % COUNTDOWN_OPTIONS.length];
+    updateTimerToggleLabel();
+});
+
 // Render filter chip bar
 function renderFilterBar() {
     filterBarEl.innerHTML = CAMERA_FILTERS.map(f => `
