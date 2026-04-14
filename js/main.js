@@ -28,6 +28,11 @@ document.addEventListener('keydown', e => {
     saveCurrentFrame();
 });
 
+// Switch camera (front / back)
+switchCameraBtnEl.addEventListener('click', () => {
+    switchCamera().catch(() => {});
+});
+
 // Countdown timer toggle (cycles 0/3/5/10 seconds)
 function updateTimerToggleLabel() {
     timerToggleLabelEl.textContent = countdownDuration > 0 ? `${countdownDuration}s` : 'Off';

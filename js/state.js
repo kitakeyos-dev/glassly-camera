@@ -11,6 +11,7 @@ let currentMode = 'glasses';
 let currentCameraFilter = 'none';
 let frozenFilter = 'none';
 let countdownDuration = 3;
+let currentFacingMode = 'user';
 let capturedPhotos = [];
 let selectedHistoryPhotoId = null;
 let selectedHistoryPhotoIds = [];

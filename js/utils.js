@@ -3,17 +3,14 @@
 let toastTimer = null;
 
 function getPreferredCameraResolution() {
-    const viewportWidth = window.innerWidth || screen.width || 1280;
-    const viewportHeight = window.innerHeight || screen.height || 720;
-    const smallerSide = Math.min(viewportWidth, viewportHeight);
     const lowPowerCpu = Number(navigator.hardwareConcurrency || 8) <= 4;
     const lowMemoryDevice = Number(navigator.deviceMemory || 8) <= 4;
 
-    if (smallerSide < 720 || lowPowerCpu || lowMemoryDevice) {
-        return { width: 640, height: 480 };
+    if (lowPowerCpu || lowMemoryDevice) {
+        return { width: 1280, height: 720 };
     }
 
-    return { width: 1280, height: 720 };
+    return { width: 1920, height: 1080 };
 }
 
 function setCaptureButtonFallback(isFallbackVisible) {

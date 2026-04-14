@@ -213,11 +213,16 @@ let cameraRunning = false;
 let resumeCameraAfterVisibility = false;
 let cameraStartPromise = null;
 
-const camera = new Camera(videoEl, {
-    onFrame: async () => { await hands.send({ image: videoEl }); },
-    width: preferredCameraResolution.width,
-    height: preferredCameraResolution.height,
-});
+function makeCamera() {
+    return new Camera(videoEl, {
+        onFrame: async () => { await hands.send({ image: videoEl }); },
+        width: preferredCameraResolution.width,
+        height: preferredCameraResolution.height,
+        facingMode: currentFacingMode,
+    });
+}
+
+let camera = makeCamera();
 
 function handleCameraError(err) {
     console.error('Camera error:', err);
@@ -246,6 +251,25 @@ async function startCamera() {
         });
 
     return cameraStartPromise;
+}
+
+async function switchCamera() {
+    const prev = currentFacingMode;
+    const next = prev === 'user' ? 'environment' : 'user';
+    stopCamera();
+    currentFacingMode = next;
+    camera = makeCamera();
+    try {
+        await startCamera();
+        canvasEl.classList.toggle('no-mirror', next === 'environment');
+    } catch (error) {
+        // Rollback if device doesn't have the requested camera
+        currentFacingMode = prev;
+        camera = makeCamera();
+        await startCamera();
+        canvasEl.classList.toggle('no-mirror', prev === 'environment');
+        showToast('Không tìm thấy camera này.', 2400);
+    }
 }
 
 function stopCamera() {

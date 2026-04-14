@@ -18,6 +18,7 @@ const countdownOverlayEl = document.getElementById('countdown-overlay');
 const filterBarEl = document.getElementById('filter-bar');
 const timerToggleEl = document.getElementById('timer-toggle');
 const timerToggleLabelEl = document.getElementById('timer-toggle-label');
+const switchCameraBtnEl = document.getElementById('switch-camera-btn');
 const captureBtnEl = document.getElementById('capture-btn');
 const captureBtnImgEl = captureBtnEl.querySelector('img');
 const modeMenuEl   = document.getElementById('mode-menu');
