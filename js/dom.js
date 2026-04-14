@@ -40,6 +40,7 @@ const uploadHistoryInputEl = document.getElementById('upload-history-input');
 const uploadCustomStickerInputEl = document.getElementById('upload-custom-sticker-input');
 const stickerUploadBtnEl = document.getElementById('sticker-upload-btn');
 const historyDownloadBtnEl = document.getElementById('history-download-btn');
+const historyDeleteBtnEl = document.getElementById('history-delete-btn');
 const historyShareBtnEl = document.getElementById('history-share-btn');
 const historyEditBtnEl = document.getElementById('history-edit-btn');
 const historyClearSelectionBtnEl = document.getElementById('history-clear-selection-btn');

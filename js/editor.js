@@ -846,19 +846,41 @@ async function saveEditorChanges() {
         showToast('Chưa có ảnh để lưu.', 2400);
         return;
     }
-    const primaryId = editorState.selectedPhotoIds[0];
-    const photo = capturedPhotos.find(p => p.id === primaryId);
-    if (!photo) {
-        showToast('Không tìm thấy ảnh gốc.', 2400);
-        return;
-    }
-    // Render the current scene once and cache it as the preview + download source.
+
     await renderEditorScene(editorExportCtx, editorExportCanvas, false, -1);
-    photo.renderedDataUrl = editorExportCanvas.toDataURL('image/jpeg', 0.92);
-    photo.editorSnapshot = snapshotEditorState();
-    showToast('Đã lưu chỉnh sửa.');
+    const fullDataUrl = editorExportCanvas.toDataURL('image/jpeg', 0.92);
+
+    const W = editorExportCanvas.width;
+    const H = editorExportCanvas.height;
+    const thumbMax = 320;
+    const scale = Math.min(1, thumbMax / Math.max(W, H));
+    const tw = Math.max(1, Math.round(W * scale));
+    const th = Math.max(1, Math.round(H * scale));
+    const thumbCanvas = document.createElement('canvas');
+    thumbCanvas.width = tw;
+    thumbCanvas.height = th;
+    thumbCanvas.getContext('2d').drawImage(editorExportCanvas, 0, 0, tw, th);
+    const thumbUrl = thumbCanvas.toDataURL('image/jpeg', 0.78);
+
+    // Always create a NEW history entry so source captures stay intact.
+    const newEntry = {
+        id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        dataUrl: fullDataUrl,
+        thumbUrl,
+        renderedDataUrl: fullDataUrl,
+        editorSnapshot: snapshotEditorState(),
+        createdAt: Date.now(),
+        label: `Đã sửa ${capturedPhotos.length + 1}`
+    };
+    capturedPhotos.unshift(newEntry);
+    if (capturedPhotos.length > MAX_CAPTURE_HISTORY) {
+        capturedPhotos = capturedPhotos.slice(0, MAX_CAPTURE_HISTORY);
+    }
+    selectedHistoryPhotoId = newEntry.id;
+    selectedHistoryPhotoIds = [newEntry.id];
+
+    showToast('Đã lưu ảnh mới.');
     closeEditor();
-    selectedHistoryPhotoId = photo.id;
     openHistoryDrawer();
 }
 

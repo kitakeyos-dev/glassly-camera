@@ -118,6 +118,19 @@ function closeHistoryDrawer() {
     updateOverlayBackdrop();
 }
 
+function removeCapturedPhoto(photoId) {
+    const idx = capturedPhotos.findIndex(p => p.id === photoId);
+    if (idx === -1) return;
+    capturedPhotos.splice(idx, 1);
+    selectedHistoryPhotoIds = selectedHistoryPhotoIds.filter(id => id !== photoId);
+    if (selectedHistoryPhotoId === photoId) {
+        selectedHistoryPhotoId = capturedPhotos[0] ? capturedPhotos[0].id : null;
+    }
+    if (historyDrawerEl.classList.contains('visible')) {
+        renderHistoryDrawer();
+    }
+}
+
 function pushCapturedPhoto(dataUrl, thumbUrl) {
     const entry = {
         id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,

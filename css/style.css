@@ -623,18 +623,26 @@ body, html {
 }
 #history-preview {
     display: none;
+    position: sticky;
+    top: 0;
+    z-index: 5;
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.1);
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    background: rgba(5,8,18,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 #history-preview.visible { display: block; }
 #history-preview img {
     width: 100%;
-    max-height: 42vh;
+    max-height: 30vh;
     object-fit: contain;
     display: block;
     background: #050812;
+}
+@media (max-height: 640px) {
+    #history-preview img { max-height: 24vh; }
 }
 .history-preview-meta {
     padding: 12px;
@@ -660,16 +668,16 @@ body, html {
 }
 .history-actions {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
 }
 .history-action {
     min-width: 0;
     border: 0;
     border-radius: 12px;
-    padding: 12px 8px;
+    padding: 12px 6px;
     font-weight: 700;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
@@ -680,6 +688,11 @@ body, html {
     grid-column: 1 / -1;
     background: #22c55e;
     color: #08110f;
+}
+.history-action.danger {
+    background: rgba(248,113,113,0.18);
+    color: #fca5a5;
+    border: 1px solid rgba(248,113,113,0.4);
 }
 .history-action.secondary {
     background: rgba(255,255,255,0.08);

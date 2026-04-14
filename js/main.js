@@ -186,6 +186,13 @@ historyShareBtnEl.addEventListener('click', () => {
     if (!photo) return;
     shareCurrentFrame(photo);
 });
+historyDeleteBtnEl.addEventListener('click', () => {
+    const photo = getSelectedHistoryPhoto();
+    if (!photo) return;
+    if (!confirm(`Xoá "${photo.label}" khỏi lịch sử?`)) return;
+    removeCapturedPhoto(photo.id);
+    showToast('Đã xoá ảnh.');
+});
 historyEditBtnEl.addEventListener('click', openEditorFromHistory);
 historyClearSelectionBtnEl.addEventListener('click', clearHistoryPhotoSelection);
 document.addEventListener('click', event => {
@@ -424,8 +431,22 @@ startCamera().catch(() => {});
 // Register PWA service worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-            console.warn('SW registration failed:', err);
-        });
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+            .then(reg => {
+                // Poll for updates whenever the tab becomes visible
+                reg.update();
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) reg.update();
+                });
+                // When a new SW takes control, reload the page once so the
+                // user immediately sees the latest HTML/CSS/JS.
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    refreshing = true;
+                    window.location.reload();
+                });
+            })
+            .catch(err => console.warn('SW registration failed:', err));
     });
 }
