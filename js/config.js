@@ -79,6 +79,74 @@ const DEFAULT_SAVE_TOAST  = 'Đã lưu ảnh!';
 
 const COUNTDOWN_OPTIONS = [0, 3, 5, 10];
 
+const GLASS_PALETTES = [
+    {
+        id: 'clear',
+        label: 'Trong suốt',
+        shimmer: [
+            'rgba(180, 160, 255, 0.18)',
+            'rgba(120, 220, 255, 0.08)',
+            'rgba(255, 200, 220, 0.12)',
+            'rgba(160, 255, 200, 0.06)'
+        ],
+        bevel: ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.15)', 'rgba(180,180,180,0.55)'],
+        stroke: 'rgba(255,255,255,0.9)',
+        progressHue: [255, 255, 255, 99, 102, 241]
+    },
+    {
+        id: 'ice',
+        label: 'Băng',
+        shimmer: [
+            'rgba(165, 220, 255, 0.25)',
+            'rgba(200, 240, 255, 0.12)',
+            'rgba(140, 200, 240, 0.18)',
+            'rgba(220, 250, 255, 0.08)'
+        ],
+        bevel: ['rgba(220, 240, 255, 0.95)', 'rgba(140, 200, 240, 0.18)', 'rgba(100, 170, 220, 0.6)'],
+        stroke: 'rgba(200, 240, 255, 0.95)',
+        progressHue: [200, 240, 255, 56, 189, 248]
+    },
+    {
+        id: 'rose',
+        label: 'Rose gold',
+        shimmer: [
+            'rgba(255, 200, 210, 0.22)',
+            'rgba(255, 220, 200, 0.14)',
+            'rgba(255, 180, 190, 0.18)',
+            'rgba(255, 230, 220, 0.08)'
+        ],
+        bevel: ['rgba(255, 230, 220, 0.95)', 'rgba(255, 180, 180, 0.2)', 'rgba(210, 130, 140, 0.6)'],
+        stroke: 'rgba(255, 210, 200, 0.95)',
+        progressHue: [255, 220, 220, 244, 114, 182]
+    },
+    {
+        id: 'neon',
+        label: 'Neon',
+        shimmer: [
+            'rgba(120, 255, 220, 0.28)',
+            'rgba(255, 120, 255, 0.16)',
+            'rgba(120, 200, 255, 0.2)',
+            'rgba(255, 255, 120, 0.12)'
+        ],
+        bevel: ['rgba(160, 255, 240, 0.95)', 'rgba(255, 120, 255, 0.25)', 'rgba(100, 240, 200, 0.6)'],
+        stroke: 'rgba(180, 255, 220, 0.95)',
+        progressHue: [180, 255, 220, 34, 211, 238]
+    },
+    {
+        id: 'gold',
+        label: 'Vàng',
+        shimmer: [
+            'rgba(255, 220, 140, 0.25)',
+            'rgba(255, 200, 100, 0.16)',
+            'rgba(255, 240, 180, 0.14)',
+            'rgba(255, 180, 80, 0.1)'
+        ],
+        bevel: ['rgba(255, 240, 200, 0.95)', 'rgba(255, 200, 100, 0.22)', 'rgba(200, 150, 60, 0.6)'],
+        stroke: 'rgba(255, 220, 140, 0.95)',
+        progressHue: [255, 230, 160, 234, 179, 8]
+    }
+];
+
 const CAMERA_FILTERS = [
     { id: 'none',    label: 'Gốc',    css: 'none' },
     { id: 'bw',      label: 'Trắng đen', css: 'grayscale(1) contrast(1.12)' },

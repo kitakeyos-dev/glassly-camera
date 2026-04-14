@@ -10,6 +10,7 @@ let lastGesture  = null;
 let currentMode = 'glasses';
 let currentCameraFilter = 'none';
 let frozenFilter = 'none';
+let currentGlassPalette = 'clear';
 let countdownDuration = 3;
 let currentFacingMode = 'user';
 let capturedPhotos = [];

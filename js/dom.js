@@ -16,6 +16,7 @@ const gestureTagEl = document.getElementById('gesture-tag');
 const saveToastEl  = document.getElementById('save-toast');
 const countdownOverlayEl = document.getElementById('countdown-overlay');
 const filterBarEl = document.getElementById('filter-bar');
+const paletteBarEl = document.getElementById('palette-bar');
 const timerToggleEl = document.getElementById('timer-toggle');
 const timerToggleLabelEl = document.getElementById('timer-toggle-label');
 const switchCameraBtnEl = document.getElementById('switch-camera-btn');

@@ -53,6 +53,7 @@ function drawGlass3D(liveImage, glass, progress) {
     const isSnapped = progress >= 1;
     const liveFilterDef = CAMERA_FILTERS.find(f => f.id === currentCameraFilter);
     const liveFilterCss = liveFilterDef ? liveFilterDef.css : 'none';
+    const palette = GLASS_PALETTES.find(p => p.id === currentGlassPalette) || GLASS_PALETTES[0];
     ctx.save();
 
     // Clip vùng hình
@@ -91,10 +92,10 @@ function drawGlass3D(liveImage, glass, progress) {
             glass.cx - 150, glass.cy - 150,
             glass.cx + 150, glass.cy + 150
         );
-        shimmer.addColorStop(0,   'rgba(180, 160, 255, 0.18)');
-        shimmer.addColorStop(0.4, 'rgba(120, 220, 255, 0.08)');
-        shimmer.addColorStop(0.7, 'rgba(255, 200, 220, 0.12)');
-        shimmer.addColorStop(1,   'rgba(160, 255, 200, 0.06)');
+        shimmer.addColorStop(0,   palette.shimmer[0]);
+        shimmer.addColorStop(0.4, palette.shimmer[1]);
+        shimmer.addColorStop(0.7, palette.shimmer[2]);
+        shimmer.addColorStop(1,   palette.shimmer[3]);
         ctx.fillStyle = shimmer;
         ctx.fill();
         ctx.restore();
@@ -109,22 +110,23 @@ function drawGlass3D(liveImage, glass, progress) {
             glass.cx - 120, glass.cy - 120,
             glass.cx + 120, glass.cy + 120
         );
-        bevel.addColorStop(0,    'rgba(255,255,255,0.95)');
-        bevel.addColorStop(0.45, 'rgba(255,255,255,0.15)');
-        bevel.addColorStop(1,    'rgba(180,180,180,0.55)');
+        bevel.addColorStop(0,    palette.bevel[0]);
+        bevel.addColorStop(0.45, palette.bevel[1]);
+        bevel.addColorStop(1,    palette.bevel[2]);
         ctx.lineWidth   = 9;
         ctx.strokeStyle = bevel;
         ctx.stroke();
 
         buildPath(glass);
         ctx.lineWidth   = 2;
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.strokeStyle = palette.stroke;
         ctx.stroke();
     } else {
         const t = Math.max(0, Math.min(1, progress));
-        const r = Math.round(255 - (255 - 99)  * t);
-        const g = Math.round(255 - (255 - 102) * t);
-        const b = Math.round(255 - (255 - 241) * t);
+        const [r0, g0, b0, r1, g1, b1] = palette.progressHue;
+        const r = Math.round(r0 - (r0 - r1) * t);
+        const g = Math.round(g0 - (g0 - g1) * t);
+        const b = Math.round(b0 - (b0 - b1) * t);
         ctx.lineWidth   = 3 + 5 * t;
         ctx.strokeStyle = `rgba(${r},${g},${b},0.85)`;
         ctx.setLineDash([]);

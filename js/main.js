@@ -61,6 +61,23 @@ filterBarEl.addEventListener('click', event => {
     renderFilterBar();
 });
 
+// Render glass palette chip bar
+function renderPaletteBar() {
+    paletteBarEl.innerHTML = GLASS_PALETTES.map(p => `
+        <button class="palette-chip${p.id === currentGlassPalette ? ' active' : ''}" type="button" data-palette-id="${p.id}">
+            <span class="palette-swatch" style="background:${p.stroke}"></span>
+            ${p.label}
+        </button>
+    `).join('');
+}
+renderPaletteBar();
+paletteBarEl.addEventListener('click', event => {
+    const btn = event.target.closest('[data-palette-id]');
+    if (!btn) return;
+    currentGlassPalette = btn.dataset.paletteId;
+    renderPaletteBar();
+});
+
 // Burst mode: long-press capture → rapid shots. Short tap → countdown.
 const BURST_HOLD_MS = 400;
 const BURST_INTERVAL_MS = 420;

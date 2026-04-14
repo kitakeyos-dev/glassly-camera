@@ -209,6 +209,53 @@ body, html {
 }
 #timer-toggle.off .svg-icon { opacity: 0.55; }
 
+#palette-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(156px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    padding: 6px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    z-index: 25;
+    justify-content: flex-start;
+}
+#palette-bar::-webkit-scrollbar { display: none; }
+.palette-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(10,12,22,0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255,255,255,0.72);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px 6px 8px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+}
+.palette-chip:active { transform: scale(0.94); }
+.palette-chip.active {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.4);
+    color: #fff;
+}
+.palette-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 0 6px rgba(255,255,255,0.25);
+    flex-shrink: 0;
+}
+
 #filter-bar {
     position: fixed;
     left: 0;
