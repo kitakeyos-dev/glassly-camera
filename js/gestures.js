@@ -54,6 +54,24 @@ function checkStarGesture(lm) {
            isFingerExtended(lm, 20, 18);
 }
 
+// Trái tim 2 tay: cái + trỏ duỗi, 3 ngón còn lại gập, đầu trỏ 2 tay
+// chạm nhau (đỉnh khe trái tim) và đầu cái 2 tay chạm nhau (đáy nhọn).
+function checkTwoHandHeartGesture(h1, h2) {
+    if (isFingerExtended(h1, 12, 10) || isFingerExtended(h2, 12, 10)) return false;
+    if (isFingerExtended(h1, 16, 14) || isFingerExtended(h2, 16, 14)) return false;
+    if (isFingerExtended(h1, 20, 18) || isFingerExtended(h2, 20, 18)) return false;
+
+    const wrist = h1[0];
+    const middleBase = h1[9];
+    const handSize = Math.hypot(middleBase.x - wrist.x, middleBase.y - wrist.y);
+    if (handSize < 1e-4) return false;
+
+    const indexDist = Math.hypot(h1[8].x - h2[8].x, h1[8].y - h2[8].y);
+    const thumbDist = Math.hypot(h1[4].x - h2[4].x, h1[4].y - h2[4].y);
+
+    return indexDist < handSize * 0.55 && thumbDist < handSize * 0.55;
+}
+
 // Vòng tròn kéo dãn: cái (4) + trỏ (8) + út (20), 2 tay
 function checkStretchCircleGesture(h1, h2) {
     return  isFingerExtended(h1,  4,  3) && isFingerExtended(h2,  4,  3) &&

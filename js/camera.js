@@ -78,8 +78,27 @@ function onResults(results) {
             const leftHand  = hand1[8].x < hand2[8].x ? hand1 : hand2;
             const rightHand = hand1[8].x < hand2[8].x ? hand2 : hand1;
 
+            // Trái tim 2 tay: ưu tiên trước L-frame vì cùng config ngón
+            if (checkTwoHandHeartGesture(hand1, hand2)) {
+                const lThumb = { x: leftHand[4].x  * w, y: leftHand[4].y  * h };
+                const rThumb = { x: rightHand[4].x * w, y: rightHand[4].y * h };
+                const lIndex = { x: leftHand[8].x  * w, y: leftHand[8].y  * h };
+                const rIndex = { x: rightHand[8].x * w, y: rightHand[8].y * h };
+                const bottomX = (lThumb.x + rThumb.x) / 2;
+                const bottomY = (lThumb.y + rThumb.y) / 2;
+                const topX = (lIndex.x + rIndex.x) / 2;
+                const topY = (lIndex.y + rIndex.y) / 2;
+                const gestureH = Math.max(20, bottomY - topY);
+                // buildPath uses cy +- ry so that bottom = cy + ry*0.9 and topDip = cy - ry*0.25
+                const ry = gestureH / 1.15;
+                const rx = ry;
+                const cx = (bottomX + topX) / 2;
+                const cy = topY + ry * 0.25;
+                currentGestureData = { type: 'heart', cx, cy, rx, ry };
+                gestureName = 'TRÁI TIM 2 TAY';
+            }
             // Tứ giác 3D (L-Frame, 2 tay)
-            if (checkLFrameGesture(hand1) && checkLFrameGesture(hand2)) {
+            else if (checkLFrameGesture(hand1) && checkLFrameGesture(hand2)) {
                 const ex = 1.1;
                 const tl = { x: leftHand[8].x  * w, y: leftHand[8].y  * h };
                 const tr = { x: rightHand[8].x * w, y: rightHand[8].y * h };
