@@ -785,7 +785,11 @@ async function renderEditorScene(targetCtx, targetCanvas, includeSelection, toke
     const frameDef = FRAME_STYLES.find(f => f.id === editorState.frameStyle);
     const [photoImages, stickerImagesRaw, frameImage] = await Promise.all([
         Promise.all(selectedPhotos.map(photo => loadImageCached(photo.dataUrl))),
-        Promise.all(editorState.activeStickers.map(sticker => loadImageCached(sticker.src))),
+        Promise.all(editorState.activeStickers.map(sticker =>
+            sticker.kind === 'text' || !sticker.src
+                ? Promise.resolve(null)
+                : loadImageCached(sticker.src).catch(() => null)
+        )),
         frameDef && frameDef.src ? loadImageCached(frameDef.src).catch(() => null) : Promise.resolve(null)
     ]);
     const stickerSnapshot = editorState.activeStickers.map(sticker => ({ ...sticker }));
