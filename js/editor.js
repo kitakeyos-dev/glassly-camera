@@ -485,10 +485,15 @@ function drawImageCover(targetCtx, image, slot) {
     targetCtx.restore();
 }
 
-function drawEditorFrame(targetCtx, width, height) {
+function drawEditorFrame(targetCtx, width, height, frameImage) {
     const inset = 22;
 
     if (editorState.frameStyle === 'none') return;
+
+    if (frameImage) {
+        targetCtx.drawImage(frameImage, 0, 0, width, height);
+        return;
+    }
 
     if (editorState.frameStyle === 'classic') {
         targetCtx.save();
@@ -567,9 +572,14 @@ async function renderEditorScene(targetCtx, targetCanvas, includeSelection, toke
     const width = targetCanvas.width;
     const height = targetCanvas.height;
     const selectedPhotos = getEditorSelectedPhotos();
-    const photoImages = await Promise.all(selectedPhotos.map(photo => loadImageCached(photo.dataUrl)));
+    const frameDef = FRAME_STYLES.find(f => f.id === editorState.frameStyle);
+    const [photoImages, stickerImagesRaw, frameImage] = await Promise.all([
+        Promise.all(selectedPhotos.map(photo => loadImageCached(photo.dataUrl))),
+        Promise.all(editorState.activeStickers.map(sticker => loadImageCached(sticker.src))),
+        frameDef && frameDef.src ? loadImageCached(frameDef.src).catch(() => null) : Promise.resolve(null)
+    ]);
     const stickerSnapshot = editorState.activeStickers.map(sticker => ({ ...sticker }));
-    const stickerImages = await Promise.all(stickerSnapshot.map(sticker => loadImageCached(sticker.src)));
+    const stickerImages = stickerImagesRaw;
 
     if (targetCtx === editorCtx && token !== editorState.renderToken) {
         return false;
@@ -593,7 +603,7 @@ async function renderEditorScene(targetCtx, targetCanvas, includeSelection, toke
         });
     }
 
-    drawEditorFrame(targetCtx, width, height);
+    drawEditorFrame(targetCtx, width, height, frameImage);
     stickerSnapshot.forEach((sticker, index) => drawSticker(targetCtx, sticker, stickerImages[index], includeSelection));
     return true;
 }

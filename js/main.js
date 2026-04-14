@@ -8,8 +8,19 @@ canvasEl.addEventListener('click', () => {
     snapTimer = 0;
     isCooldown = false;
     updateGestureTag(null);
-    hudEl.classList.remove('hidden');
 });
+
+function openHelpSheet() {
+    helpSheetEl.classList.add('visible');
+    helpSheetEl.setAttribute('aria-hidden', 'false');
+}
+function closeHelpSheet() {
+    helpSheetEl.classList.remove('visible');
+    helpSheetEl.setAttribute('aria-hidden', 'true');
+}
+helpBtnEl.addEventListener('click', openHelpSheet);
+helpCloseBtnEl.addEventListener('click', closeHelpSheet);
+historyShortcutBtnEl.addEventListener('click', openHistoryDrawer);
 
 document.addEventListener('keydown', e => {
     if (e.code !== 'Space') return;
@@ -18,10 +29,6 @@ document.addEventListener('keydown', e => {
 });
 
 captureBtnEl.addEventListener('click', saveCurrentFrame);
-menuBtnEl.addEventListener('click', event => {
-    event.stopPropagation();
-    toggleModeMenu();
-});
 historyModeBtnEl.addEventListener('click', openHistoryDrawer);
 photobookModeBtnEl.addEventListener('click', openResearchModal);
 historyCloseBtnEl.addEventListener('click', closeHistoryDrawer);
@@ -53,7 +60,7 @@ historyEditBtnEl.addEventListener('click', openEditorFromHistory);
 historyClearSelectionBtnEl.addEventListener('click', clearHistoryPhotoSelection);
 document.addEventListener('click', event => {
     if (!modeMenuEl.classList.contains('visible')) return;
-    if (modeMenuEl.contains(event.target) || menuBtnEl.contains(event.target)) return;
+    if (modeMenuEl.contains(event.target)) return;
     toggleModeMenu(false);
 });
 document.addEventListener('keydown', event => {
@@ -62,6 +69,7 @@ document.addEventListener('keydown', event => {
     closeHistoryDrawer();
     closeResearchModal();
     closeEditor();
+    closeHelpSheet();
 });
 editorCloseBtnEl.addEventListener('click', closeEditor);
 editorDownloadBtnEl.addEventListener('click', exportEditorImage);
@@ -199,5 +207,39 @@ editorCanvasEl.addEventListener('wheel', event => {
 
     renderEditorCanvas();
 }, { passive: false });
+
+// Preload frames + stickers with progress tracking.
+// Progress 0-90% = asset downloads; 90-100% = camera + Hands init.
+const preloadAssets = [
+    ...FRAME_STYLES.filter(f => f.src).map(f => f.src),
+    ...STICKER_LIBRARY.map(s => s.src)
+];
+const totalAssets = preloadAssets.length;
+let loadedAssets = 0;
+
+function setLoadingProgress(percent, subtitle) {
+    if (!loadingProgressFillEl) return;
+    loadingProgressFillEl.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    if (subtitle && loadingSubtitleEl) loadingSubtitleEl.textContent = subtitle;
+}
+
+function markAssetLoaded() {
+    loadedAssets += 1;
+    const pct = totalAssets ? (loadedAssets / totalAssets) * 90 : 90;
+    setLoadingProgress(pct, `Đang tải tài nguyên ${loadedAssets}/${totalAssets}`);
+    if (loadedAssets >= totalAssets) {
+        setLoadingProgress(90, 'Đang khởi động camera...');
+        if (loadingTitleEl) loadingTitleEl.textContent = 'Khởi động camera';
+    }
+}
+
+if (totalAssets === 0) {
+    setLoadingProgress(90, 'Đang khởi động camera...');
+} else {
+    setLoadingProgress(0, `Đang tải tài nguyên 0/${totalAssets}`);
+    preloadAssets.forEach(src => {
+        loadImageCached(src).then(markAssetLoaded, markAssetLoaded);
+    });
+}
 
 startCamera().catch(() => {});

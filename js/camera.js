@@ -2,6 +2,8 @@
 
 function onResults(results) {
     if (!loadingEl.classList.contains('hidden')) {
+        if (loadingProgressFillEl) loadingProgressFillEl.style.width = '100%';
+        if (loadingSubtitleEl) loadingSubtitleEl.textContent = 'Sẵn sàng';
         loadingEl.classList.add('hidden');
         setTimeout(() => { loadingEl.style.display = 'none'; }, 600);
     }
@@ -99,7 +101,6 @@ function onResults(results) {
                         snapTimer       = 0;
                         currentProgress = 0;
                         flashFrames     = 10;
-                        hudEl.classList.add('hidden');
                     }
                 } else {
                     snapTimer = 0;

@@ -7,11 +7,17 @@ const COLLAGE_LAYOUTS = [
     { id: 'grid', label: 'Lưới 4', hint: 'Ghép nhiều ảnh' }
 ];
 const FRAME_STYLES = [
-    { id: 'none', label: 'Tối giản', hint: 'Không viền' },
-    { id: 'classic', label: 'Classic', hint: 'Khung trắng' },
-    { id: 'polaroid', label: 'Polaroid', hint: 'Mé dưới dày' },
-    { id: 'neon', label: 'Neon', hint: 'Phát sáng' },
-    { id: 'film', label: 'Film', hint: 'Dải phim' }
+    { id: 'none',         label: 'Tối giản',     hint: 'Không viền' },
+    { id: 'classic',      label: 'Classic',      hint: 'Khung trắng' },
+    { id: 'polaroid',     label: 'Polaroid',     hint: 'Mé dưới dày' },
+    { id: 'neon',         label: 'Neon',         hint: 'Phát sáng' },
+    { id: 'film',         label: 'Film',         hint: 'Dải phim' },
+    { id: 'gauvamatong',  label: 'Gấu mật ong',  hint: 'Bear & honey',   src: 'assets/frames/gauvamatong.png' },
+    { id: 'hoaanhdao',    label: 'Hoa anh đào',  hint: 'Sakura pastel',  src: 'assets/frames/hoaanhdao.png' },
+    { id: 'mayvasao',     label: 'Mây & sao',    hint: 'Pastel dreamy',  src: 'assets/frames/mayvasao.png' },
+    { id: 'muahevabien',  label: 'Mùa hè & biển', hint: 'Beach kawaii',  src: 'assets/frames/muahevabien.png' },
+    { id: 'polaroid90s',  label: 'Polaroid 90s', hint: 'Retro memories', src: 'assets/frames/polaroid_retro_90s.png' },
+    { id: 'scrapbooking', label: 'Scrapbook',    hint: 'Washi tape',     src: 'assets/frames/scrapbooking.png' }
 ];
 const STICKER_LIBRARY = [
     '3d-glasses.png','angry.png','axolotl (1).png','axolotl (2).png','axolotl.png','beanie.png',
