@@ -28,7 +28,82 @@ document.addEventListener('keydown', e => {
     saveCurrentFrame();
 });
 
-captureBtnEl.addEventListener('click', runCountdownCapture);
+// Render filter chip bar
+function renderFilterBar() {
+    filterBarEl.innerHTML = CAMERA_FILTERS.map(f => `
+        <button class="filter-chip${f.id === currentCameraFilter ? ' active' : ''}" type="button" data-filter-id="${f.id}">
+            ${f.label}
+        </button>
+    `).join('');
+}
+renderFilterBar();
+filterBarEl.addEventListener('click', event => {
+    const btn = event.target.closest('[data-filter-id]');
+    if (!btn) return;
+    currentCameraFilter = btn.dataset.filterId;
+    renderFilterBar();
+});
+
+// Burst mode: long-press capture → rapid shots. Short tap → countdown.
+const BURST_HOLD_MS = 400;
+const BURST_INTERVAL_MS = 420;
+const BURST_MAX = 6;
+let burstHoldTimer = null;
+let burstIntervalId = null;
+let burstFiredCount = 0;
+
+function startBurst() {
+    burstFiredCount = 1;
+    saveCurrentFrame();
+    burstIntervalId = setInterval(() => {
+        if (burstFiredCount >= BURST_MAX) {
+            stopBurst();
+            return;
+        }
+        saveCurrentFrame();
+        burstFiredCount += 1;
+    }, BURST_INTERVAL_MS);
+}
+
+function stopBurst() {
+    if (burstIntervalId) {
+        clearInterval(burstIntervalId);
+        burstIntervalId = null;
+    }
+}
+
+captureBtnEl.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    burstFiredCount = 0;
+    burstHoldTimer = setTimeout(() => {
+        burstHoldTimer = null;
+        startBurst();
+    }, BURST_HOLD_MS);
+});
+
+function endCapturePress() {
+    if (burstHoldTimer) {
+        clearTimeout(burstHoldTimer);
+        burstHoldTimer = null;
+        // Short tap — trigger countdown
+        runCountdownCapture();
+    } else {
+        stopBurst();
+    }
+    burstFiredCount = 0;
+}
+captureBtnEl.addEventListener('pointerup', endCapturePress);
+captureBtnEl.addEventListener('pointercancel', () => {
+    if (burstHoldTimer) {
+        clearTimeout(burstHoldTimer);
+        burstHoldTimer = null;
+    }
+    stopBurst();
+    burstFiredCount = 0;
+});
+captureBtnEl.addEventListener('pointerleave', () => {
+    if (burstIntervalId) stopBurst();
+});
 historyModeBtnEl.addEventListener('click', openHistoryDrawer);
 photobookModeBtnEl.addEventListener('click', openResearchModal);
 historyCloseBtnEl.addEventListener('click', closeHistoryDrawer);

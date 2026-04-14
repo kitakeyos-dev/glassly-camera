@@ -76,3 +76,14 @@ const SNAP_DELAY          = 2000;
 const STABILITY_THRESHOLD = 80;
 const MAX_CAPTURE_HISTORY = 10;
 const DEFAULT_SAVE_TOAST  = 'Đã lưu ảnh!';
+
+const CAMERA_FILTERS = [
+    { id: 'none',    label: 'Gốc',    css: 'none' },
+    { id: 'bw',      label: 'Trắng đen', css: 'grayscale(1) contrast(1.12)' },
+    { id: 'sepia',   label: 'Sepia',  css: 'sepia(0.7) saturate(1.2) contrast(1.05)' },
+    { id: 'vivid',   label: 'Rực rỡ', css: 'saturate(1.65) contrast(1.1) brightness(1.05)' },
+    { id: 'cool',    label: 'Lạnh',   css: 'saturate(1.15) hue-rotate(-12deg) brightness(1.02)' },
+    { id: 'warm',    label: 'Ấm',     css: 'saturate(1.2) hue-rotate(12deg) brightness(1.03)' },
+    { id: 'dreamy',  label: 'Mơ màng', css: 'blur(0.4px) brightness(1.08) saturate(1.2)' },
+    { id: 'noir',    label: 'Noir',   css: 'grayscale(1) contrast(1.4) brightness(0.92)' }
+];

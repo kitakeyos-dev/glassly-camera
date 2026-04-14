@@ -15,6 +15,7 @@ const historyShortcutBtnEl = document.getElementById('history-shortcut-btn');
 const gestureTagEl = document.getElementById('gesture-tag');
 const saveToastEl  = document.getElementById('save-toast');
 const countdownOverlayEl = document.getElementById('countdown-overlay');
+const filterBarEl = document.getElementById('filter-bar');
 const captureBtnEl = document.getElementById('capture-btn');
 const captureBtnImgEl = captureBtnEl.querySelector('img');
 const modeMenuEl   = document.getElementById('mode-menu');

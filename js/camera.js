@@ -164,8 +164,14 @@ function onResults(results) {
 
     ctx.clearRect(0, 0, w, h);
 
+    const filterDef = CAMERA_FILTERS.find(f => f.id === currentCameraFilter);
+    const filterCss = filterDef ? filterDef.css : 'none';
+
     const usesFrozenBg = frozenGlass && !activeGlass;
+    ctx.save();
+    ctx.filter = filterCss;
     ctx.drawImage(usesFrozenBg ? frozenCanvas : results.image, 0, 0, w, h);
+    ctx.restore();
 
     if (frozenGlass && !activeGlass) {
         drawGlass3D(results.image, frozenGlass, 1.0);

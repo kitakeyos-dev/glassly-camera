@@ -8,6 +8,7 @@ let isCooldown   = false;
 let flashFrames  = 0;
 let lastGesture  = null;
 let currentMode = 'glasses';
+let currentCameraFilter = 'none';
 let capturedPhotos = [];
 let selectedHistoryPhotoId = null;
 let selectedHistoryPhotoIds = [];
