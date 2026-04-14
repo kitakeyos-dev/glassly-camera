@@ -13,6 +13,21 @@ function buildPath(glass) {
         ctx.lineTo(glass.bl.x, glass.bl.y);
     } else if (glass.type === 'circle') {
         ctx.ellipse(glass.cx, glass.cy, glass.rx, glass.ry, glass.angle, 0, Math.PI * 2);
+    } else if (glass.type === 'star') {
+        // Ngôi sao 5 cánh
+        const { cx, cy } = glass;
+        const outer = Math.max(glass.rx, glass.ry);
+        const inner = outer * 0.42;
+        const spikes = 5;
+        let rot = -Math.PI / 2;
+        const step = Math.PI / spikes;
+        ctx.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+        for (let i = 0; i < spikes; i++) {
+            rot += step;
+            ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
+            rot += step;
+            ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+        }
     } else if (glass.type === 'heart') {
         const { cx, cy, rx: w, ry: h } = glass;
         // Heart path via 2 bezier curves, cx/cy = visual center of heart.
@@ -147,6 +162,9 @@ function drawProgressRing(glass, progress) {
     } else if (glass.type === 'heart') {
         cx = glass.cx; cy = glass.cy;
         rx = ry = Math.max(glass.rx, glass.ry) * 1.45;
+    } else if (glass.type === 'star') {
+        cx = glass.cx; cy = glass.cy;
+        rx = ry = Math.max(glass.rx, glass.ry) * 1.3;
     } else {
         cx = glass.cx; cy = glass.cy;
         const pts = [glass.tl, glass.tr, glass.br, glass.bl];

@@ -28,7 +28,7 @@ document.addEventListener('keydown', e => {
     saveCurrentFrame();
 });
 
-captureBtnEl.addEventListener('click', saveCurrentFrame);
+captureBtnEl.addEventListener('click', runCountdownCapture);
 historyModeBtnEl.addEventListener('click', openHistoryDrawer);
 photobookModeBtnEl.addEventListener('click', openResearchModal);
 historyCloseBtnEl.addEventListener('click', closeHistoryDrawer);
@@ -55,6 +55,11 @@ historyDownloadBtnEl.addEventListener('click', () => {
     if (!photo) return;
     downloadDataUrl(photo.dataUrl, `${photo.id}.png`);
     showToast('Đã tải lại ảnh đã chọn!');
+});
+historyShareBtnEl.addEventListener('click', () => {
+    const photo = getSelectedHistoryPhoto();
+    if (!photo) return;
+    shareCurrentFrame(photo);
 });
 historyEditBtnEl.addEventListener('click', openEditorFromHistory);
 historyClearSelectionBtnEl.addEventListener('click', clearHistoryPhotoSelection);

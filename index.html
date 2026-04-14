@@ -62,6 +62,7 @@
                 <div id="history-selection-count" class="history-selection-count"></div>
                 <div class="history-actions">
                     <button class="history-action primary" id="history-download-btn" type="button">Tải xuống</button>
+                    <button class="history-action secondary" id="history-share-btn" type="button">Chia sẻ</button>
                     <button class="history-action secondary" id="history-edit-btn" type="button">Mở chỉnh sửa</button>
                     <button class="history-action secondary" id="history-clear-selection-btn" type="button">Bỏ chọn ảnh ghép</button>
                 </div>
@@ -136,6 +137,7 @@
 
 <div id="gesture-tag"></div>
 <div id="save-toast"></div>
+<div id="countdown-overlay" aria-hidden="true"></div>
 
 <div id="capture-dock">
     <button id="help-btn" class="capture-dock-btn" type="button" aria-label="Huong dan cu chi">
@@ -179,10 +181,17 @@
             </div>
         </div>
         <div class="gesture-guide-item">
-            <div class="gesture-guide-icon"><svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-4.35-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.65-7 10-7 10z" opacity=".3"/><path d="M12 21s-7-4.35-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.65-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            <div class="gesture-guide-icon"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.35-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.65-7 10-7 10z"/></svg></div>
             <div>
                 <strong>Trái tim</strong>
                 <p>1 tay — ngón cái và ngón trỏ đan chéo thành chữ X, 3 ngón còn lại gập.</p>
+            </div>
+        </div>
+        <div class="gesture-guide-item">
+            <div class="gesture-guide-icon"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.3 17 14.5 18.5 21.5 12 17.8 5.5 21.5 7 14.5 2 9.3 9 9 12 2"/></svg></div>
+            <div>
+                <strong>Ngôi sao</strong>
+                <p>1 tay — xoè đều cả 5 ngón, lòng bàn tay hướng camera.</p>
             </div>
         </div>
         <div class="help-hint">

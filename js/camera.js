@@ -33,6 +33,24 @@ function onResults(results) {
             };
             gestureName = 'TAM GIÁC';
         }
+        // Ngôi sao: 5 ngón xoè (1 tay)
+        else if (checkStarGesture(hand1)) {
+            const wrist      = { x: hand1[0].x * w, y: hand1[0].y * h };
+            const middleBase = { x: hand1[9].x * w, y: hand1[9].y * h };
+            const middleTip  = { x: hand1[12].x * w, y: hand1[12].y * h };
+            const handSize   = Math.hypot(middleBase.x - wrist.x, middleBase.y - wrist.y);
+            // Tâm ngôi sao = giữa lòng bàn tay (trên cổ tay 1 chút về phía ngón giữa)
+            const cx = (middleBase.x + middleTip.x) / 2;
+            const cy = (middleBase.y + middleTip.y) / 2;
+            const size = handSize * 1.8;
+            currentGestureData = {
+                type: 'star',
+                cx, cy,
+                rx: size,
+                ry: size,
+            };
+            gestureName = 'NGÔI SAO';
+        }
         // Finger heart: cái + trỏ đan chéo thành X (1 tay)
         else if (checkFingerHeartGesture(hand1)) {
             const wrist      = { x: hand1[0].x * w, y: hand1[0].y * h };
@@ -122,6 +140,8 @@ function onResults(results) {
                         snapTimer       = 0;
                         currentProgress = 0;
                         flashFrames     = 10;
+                        // Hands-free: tự lưu sau khi frame đã vẽ frozen glass (~200ms để flash bắt đầu)
+                        setTimeout(() => saveCurrentFrame(), 220);
                     }
                 } else {
                     snapTimer = 0;
