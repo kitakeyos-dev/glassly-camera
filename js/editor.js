@@ -424,7 +424,7 @@ function closeEditor() {
     startCamera().catch(() => {});
 }
 
-function openEditorFromHistory() {
+async function openEditorFromHistory() {
     const editorPhotos = getHistoryPhotosForEditor();
     if (!editorPhotos.length) {
         showToast('Hãy chọn một ảnh trong lịch sử trước.', 2200);
@@ -435,13 +435,22 @@ function openEditorFromHistory() {
     stopCamera();
     editorState.isOpen = true;
     currentMode = 'editor';
-    editorState.selectedPhotoIds = editorPhotos.map(photo => photo.id);
-    editorState.collageLayout =
-        editorPhotos.length >= 3 ? 'grid' :
-        editorPhotos.length === 2 ? 'split-v' :
-        'single';
-    editorState.frameStyle = 'classic';
-    editorState.activeStickers = [];
+
+    const primary = editorPhotos[0];
+    const existingSnap = primary && primary.editorSnapshot;
+
+    if (existingSnap) {
+        await applySnapshotToState(existingSnap);
+    } else {
+        editorState.selectedPhotoIds = editorPhotos.map(photo => photo.id);
+        editorState.collageLayout =
+            editorPhotos.length >= 3 ? 'grid' :
+            editorPhotos.length === 2 ? 'split-v' :
+            'single';
+        editorState.frameStyle = 'classic';
+        editorState.activeStickers = [];
+    }
+
     editorState.selectedStickerId = null;
     editorState.stickerSearch = '';
     editorState.dragStickerId = null;
@@ -831,12 +840,95 @@ async function renderEditorCanvas() {
     drawEraserCursor(editorCtx);
 }
 
-async function exportEditorImage() {
+async function saveEditorChanges() {
     if (!editorState.isOpen) return;
+    if (!editorState.selectedPhotoIds.length) {
+        showToast('Chưa có ảnh để lưu.', 2400);
+        return;
+    }
+    const primaryId = editorState.selectedPhotoIds[0];
+    const photo = capturedPhotos.find(p => p.id === primaryId);
+    if (!photo) {
+        showToast('Không tìm thấy ảnh gốc.', 2400);
+        return;
+    }
+    // Render the current scene once and cache it as the preview + download source.
     await renderEditorScene(editorExportCtx, editorExportCanvas, false, -1);
-    const dataUrl = editorExportCanvas.toDataURL('image/png');
-    downloadDataUrl(dataUrl, `picai-editor-${Date.now()}.png`);
-    showToast('Đã xuất ảnh PNG!', 2400);
+    photo.renderedDataUrl = editorExportCanvas.toDataURL('image/jpeg', 0.92);
+    photo.editorSnapshot = snapshotEditorState();
+    showToast('Đã lưu chỉnh sửa.');
+    closeEditor();
+    selectedHistoryPhotoId = photo.id;
+    openHistoryDrawer();
+}
+
+async function applySnapshotToState(snapshot) {
+    editorState.selectedPhotoIds = [...snapshot.selectedPhotoIds];
+    editorState.collageLayout = snapshot.collageLayout;
+    editorState.frameStyle = snapshot.frameStyle;
+    editorState.activeStickers = await Promise.all(snapshot.activeStickers.map(async data => {
+        const sticker = {
+            id: data.id,
+            label: data.label,
+            src: data.src,
+            kind: data.kind || 'image',
+            textContent: data.textContent,
+            textFontId: data.textFontId,
+            textFontSize: data.textFontSize,
+            textColor: data.textColor,
+            width: data.width,
+            height: data.height,
+            x: data.x,
+            y: data.y,
+            scale: data.scale,
+            rotation: data.rotation,
+            flipX: data.flipX,
+            flipY: data.flipY
+        };
+        if (data.renderCanvasData) {
+            try {
+                const img = await loadImageCached(data.renderCanvasData);
+                const surface = createStickerRenderSurface(img, data.width, data.height);
+                sticker.renderCanvas = surface.renderCanvas;
+                sticker.renderCtx = surface.renderCtx;
+            } catch (e) {
+                if (sticker.kind === 'text' && data.textContent) {
+                    const fontDef = TEXT_FONTS.find(f => f.id === data.textFontId) || TEXT_FONTS[0];
+                    const surface = createTextRenderCanvas(data.textContent, data.textFontSize, fontDef.css, data.textColor);
+                    sticker.renderCanvas = surface.canvas;
+                    sticker.renderCtx = surface.canvas.getContext('2d');
+                }
+            }
+        }
+        return sticker;
+    }));
+    editorState.selectedStickerId = null;
+}
+
+async function renderPhotoToDataUrl(photo) {
+    if (!photo) return null;
+    if (!photo.editorSnapshot) return photo.dataUrl;
+
+    // Save current editorState fields, swap in snapshot, render, then restore.
+    const saved = {
+        selectedPhotoIds: editorState.selectedPhotoIds,
+        collageLayout: editorState.collageLayout,
+        frameStyle: editorState.frameStyle,
+        activeStickers: editorState.activeStickers,
+        selectedStickerId: editorState.selectedStickerId
+    };
+
+    try {
+        await applySnapshotToState(photo.editorSnapshot);
+        await renderEditorScene(editorExportCtx, editorExportCanvas, false, -1);
+        return editorExportCanvas.toDataURL('image/png');
+    } finally {
+        editorState.selectedPhotoIds = saved.selectedPhotoIds;
+        editorState.collageLayout = saved.collageLayout;
+        editorState.frameStyle = saved.frameStyle;
+        editorState.activeStickers = saved.activeStickers;
+        editorState.selectedStickerId = saved.selectedStickerId;
+    }
 }
 
 function stopStickerDrag(pointerId) {

@@ -177,8 +177,9 @@ historyListEl.addEventListener('click', event => {
 historyDownloadBtnEl.addEventListener('click', () => {
     const photo = getSelectedHistoryPhoto();
     if (!photo) return;
-    downloadDataUrl(photo.dataUrl, `${photo.id}.png`);
-    showToast('Đã tải lại ảnh đã chọn!');
+    const dataUrl = photo.renderedDataUrl || photo.dataUrl;
+    downloadDataUrl(dataUrl, `${photo.id}.png`);
+    showToast('Đã tải ảnh.');
 });
 historyShareBtnEl.addEventListener('click', () => {
     const photo = getSelectedHistoryPhoto();
@@ -214,7 +215,7 @@ document.addEventListener('keydown', event => {
     }
 });
 editorCloseBtnEl.addEventListener('click', closeEditor);
-editorDownloadBtnEl.addEventListener('click', exportEditorImage);
+editorDownloadBtnEl.addEventListener('click', saveEditorChanges);
 editorUndoBtnEl.addEventListener('click', () => { editorUndo(); });
 editorRedoBtnEl.addEventListener('click', () => { editorRedo(); });
 editorLayoutOptionsEl.addEventListener('click', event => {

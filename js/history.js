@@ -67,9 +67,10 @@ function renderHistoryDrawer() {
         const isSelected = selectedHistoryPhotoIds.includes(photo.id);
         item.className = `history-item${isFocused ? ' focused' : ''}${isSelected ? ' selected' : ''}`;
         item.dataset.photoId = photo.id;
+        const thumbSrc = photo.renderedDataUrl || photo.dataUrl;
         item.innerHTML = `
             <span class="history-item-toggle" data-toggle-photo-id="${photo.id}" aria-label="${isSelected ? 'Bo chon anh' : 'Chon anh de ghep'}">${isSelected ? icons.check : icons.add}</span>
-            <img src="${photo.dataUrl}" alt="${photo.label}">
+            <img src="${thumbSrc}" alt="${photo.label}">
             <div class="history-item-meta">
                 <strong>${photo.label}</strong>
                 <span>${formatCaptureTime(photo.createdAt)}</span>
@@ -82,8 +83,10 @@ function renderHistoryDrawer() {
     historyPreviewEl.classList.toggle('visible', !!selected);
     if (!selected) return;
 
-    historyPreviewImageEl.src = selected.dataUrl;
-    historyPreviewTitleEl.textContent = selected.label;
+    historyPreviewImageEl.src = selected.renderedDataUrl || selected.dataUrl;
+    historyPreviewTitleEl.textContent = selected.editorSnapshot
+        ? `${selected.label} • đã chỉnh sửa`
+        : selected.label;
     historyPreviewTimeEl.textContent = `Đã lưu lúc ${formatCaptureTime(selected.createdAt)}`;
     if (selectedHistoryPhotoIds.length) {
         historySelectionCountEl.textContent = `Đã chọn ${selectedHistoryPhotoIds.length}/4 ảnh để ghép trong editor.`;

@@ -13,13 +13,11 @@ function saveCurrentFrame() {
     sCtx.scale(-1, 1);
     sCtx.drawImage(canvasEl, 0, 0);
 
-    const filename = `glass-${Date.now()}.png`;
     const dataUrl = save.toDataURL('image/png');
     pushCapturedPhoto(dataUrl);
-    downloadDataUrl(dataUrl, filename);
 
     if (navigator.vibrate) navigator.vibrate(30);
-    showToast('Đã lưu ảnh!');
+    showToast('Đã lưu vào lịch sử.');
 }
 
 function runCountdownCapture() {
@@ -118,13 +116,14 @@ async function addCustomUploadSticker(file) {
 
 async function shareCurrentFrame(photo) {
     try {
-        const res = await fetch(photo.dataUrl);
+        const dataUrl = photo.renderedDataUrl || photo.dataUrl;
+        const res = await fetch(dataUrl);
         const blob = await res.blob();
         const file = new File([blob], `${photo.id}.png`, { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file], title: '3D Glass', text: photo.label });
         } else if (navigator.share) {
-            await navigator.share({ title: '3D Glass', text: photo.label, url: photo.dataUrl });
+            await navigator.share({ title: '3D Glass', text: photo.label, url: dataUrl });
         } else {
             showToast('Thiết bị không hỗ trợ chia sẻ.', 2600);
         }
