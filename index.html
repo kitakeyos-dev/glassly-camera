@@ -127,6 +127,22 @@
                     <input id="sticker-search-input" class="editor-search" type="search" placeholder="Tìm sticker...">
                     <div id="sticker-list" class="sticker-grid"></div>
                 </div>
+                <div class="editor-tab-panel" data-panel="text">
+                    <textarea id="text-input" class="editor-search text-input" rows="2" placeholder="Nhập chữ..."></textarea>
+                    <label class="text-field">
+                        <span>Font</span>
+                        <select id="text-font-select" class="text-select"></select>
+                    </label>
+                    <label class="text-field">
+                        <span>Cỡ chữ <strong id="text-size-value">96</strong></span>
+                        <input id="text-size-range" type="range" min="32" max="240" step="4" value="96">
+                    </label>
+                    <div class="text-field">
+                        <span>Màu</span>
+                        <div id="text-color-row" class="text-color-row"></div>
+                    </div>
+                    <button id="text-add-btn" class="editor-action-btn" type="button">Thêm chữ</button>
+                </div>
             </div>
         </div>
     </div>

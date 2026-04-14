@@ -1269,6 +1269,61 @@ body, html {
     text-align: center;
 }
 
+.text-input {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+    line-height: 1.4;
+}
+.text-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: rgba(255,255,255,0.72);
+    font-size: 0.78rem;
+}
+.text-field > span {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.text-field strong {
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+.text-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.85rem;
+    appearance: none;
+}
+.text-color-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.text-color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 2px solid rgba(255,255,255,0.18);
+    background: #fff;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.14s, border-color 0.14s;
+}
+.text-color-swatch:active { transform: scale(0.92); }
+.text-color-swatch.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+}
+
 @media (max-width: 900px) {
     #gesture-tag {
         max-width: calc(100vw - 24px);

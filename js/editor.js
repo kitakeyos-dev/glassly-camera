@@ -14,6 +14,11 @@ function snapshotEditorState() {
             id: s.id,
             label: s.label,
             src: s.src,
+            kind: s.kind || 'image',
+            textContent: s.textContent,
+            textFontId: s.textFontId,
+            textFontSize: s.textFontSize,
+            textColor: s.textColor,
             width: s.width,
             height: s.height,
             x: s.x,
@@ -50,6 +55,11 @@ async function restoreEditorSnapshot(snapshot) {
             id: data.id,
             label: data.label,
             src: data.src,
+            kind: data.kind || 'image',
+            textContent: data.textContent,
+            textFontId: data.textFontId,
+            textFontSize: data.textFontSize,
+            textColor: data.textColor,
             width: data.width,
             height: data.height,
             x: data.x,
@@ -66,10 +76,17 @@ async function restoreEditorSnapshot(snapshot) {
                 sticker.renderCanvas = surface.renderCanvas;
                 sticker.renderCtx = surface.renderCtx;
             } catch (e) {
-                const fallback = await loadImageCached(data.src);
-                const surface = createStickerRenderSurface(fallback, data.width, data.height);
-                sticker.renderCanvas = surface.renderCanvas;
-                sticker.renderCtx = surface.renderCtx;
+                if (sticker.kind === 'text' && data.textContent) {
+                    const fontDef = TEXT_FONTS.find(f => f.id === data.textFontId) || TEXT_FONTS[0];
+                    const surface = createTextRenderCanvas(data.textContent, data.textFontSize, fontDef.css, data.textColor);
+                    sticker.renderCanvas = surface.canvas;
+                    sticker.renderCtx = surface.canvas.getContext('2d');
+                } else if (data.src) {
+                    const fallback = await loadImageCached(data.src);
+                    const surface = createStickerRenderSurface(fallback, data.width, data.height);
+                    sticker.renderCanvas = surface.renderCanvas;
+                    sticker.renderCtx = surface.renderCtx;
+                }
             }
         }
         return sticker;
@@ -368,6 +385,16 @@ function renderStickerLibrary() {
     `).join('');
 }
 
+function renderTextPanelStatic() {
+    if (!textFontSelectEl || textFontSelectEl.options.length) return;
+    textFontSelectEl.innerHTML = TEXT_FONTS.map(f =>
+        `<option value="${f.id}">${f.label}</option>`
+    ).join('');
+    textColorRowEl.innerHTML = TEXT_PRESET_COLORS.map((c, i) =>
+        `<button type="button" class="text-color-swatch${i === 0 ? ' active' : ''}" data-color="${c}" style="background:${c}" aria-label="Mau ${c}"></button>`
+    ).join('');
+}
+
 function renderEditorPanels() {
     renderEditorTabs();
     renderStickerToolbar();
@@ -375,6 +402,7 @@ function renderEditorPanels() {
     renderEditorFrameOptions();
     renderEditorPhotoPicker();
     renderStickerLibrary();
+    renderTextPanelStatic();
     syncStickerControls();
 }
 
@@ -451,6 +479,79 @@ function toggleEditorPhotoSelection(photoId) {
 
     renderEditorPhotoPicker();
     renderEditorCanvas();
+}
+
+function createTextRenderCanvas(content, fontSize, fontFamily, color) {
+    const padding = Math.round(fontSize * 0.25);
+    const lines = content.split('\n');
+
+    // Measure
+    const measureCanvas = document.createElement('canvas');
+    const mCtx = measureCanvas.getContext('2d');
+    mCtx.font = `700 ${fontSize}px ${fontFamily}`;
+    let maxWidth = 0;
+    lines.forEach(line => {
+        const w = mCtx.measureText(line).width;
+        if (w > maxWidth) maxWidth = w;
+    });
+    const lineHeight = Math.round(fontSize * 1.2);
+    const width = Math.max(1, Math.round(maxWidth + padding * 2));
+    const height = Math.max(1, lineHeight * lines.length + padding * 2);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const c = canvas.getContext('2d', { willReadFrequently: true });
+    c.font = `700 ${fontSize}px ${fontFamily}`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillStyle = color;
+    // Subtle shadow for readability on any background
+    c.shadowColor = 'rgba(0,0,0,0.45)';
+    c.shadowBlur = Math.round(fontSize * 0.1);
+    c.shadowOffsetY = Math.round(fontSize * 0.06);
+    lines.forEach((line, i) => {
+        const y = padding + lineHeight * (i + 0.5);
+        c.fillText(line, width / 2, y);
+    });
+
+    return { canvas, width, height };
+}
+
+function addTextToEditor(content, options) {
+    const text = content.trim();
+    if (!text) return;
+    const fontSize = options.fontSize || 96;
+    const fontDef = TEXT_FONTS.find(f => f.id === options.fontId) || TEXT_FONTS[0];
+    const color = options.color || '#ffffff';
+
+    const surface = createTextRenderCanvas(text, fontSize, fontDef.css, color);
+    const sticker = {
+        id: `active-text-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        label: text.length > 20 ? text.slice(0, 20) + '…' : text,
+        src: '',
+        kind: 'text',
+        textContent: text,
+        textFontId: fontDef.id,
+        textFontSize: fontSize,
+        textColor: color,
+        width: surface.width,
+        height: surface.height,
+        x: editorCanvasEl.width / 2,
+        y: editorCanvasEl.height / 2,
+        scale: 1,
+        rotation: 0,
+        flipX: 1,
+        flipY: 1,
+        renderCanvas: surface.canvas,
+        renderCtx: surface.canvas.getContext('2d')
+    };
+
+    editorState.activeStickers.push(sticker);
+    editorState.selectedStickerId = sticker.id;
+    syncStickerControls();
+    renderEditorCanvas();
+    pushEditorHistory();
 }
 
 async function addStickerToEditor(stickerId) {

@@ -59,11 +59,21 @@ const editorState = {
 };
 
 const EDITOR_TABS = [
-    { id: 'photo',   label: 'Ảnh',    icon: 'photo',   title: 'Chọn ảnh ghép' },
-    { id: 'layout',  label: 'Bố cục', icon: 'layout',  title: 'Bố cục ghép ảnh' },
-    { id: 'frame',   label: 'Khung',  icon: 'frame',   title: 'Khung viền' },
-    { id: 'sticker', label: 'Sticker', icon: 'sticker', title: 'Thư viện sticker' }
+    { id: 'photo',   label: 'Ảnh',     icon: 'photo',   title: 'Chọn ảnh ghép' },
+    { id: 'layout',  label: 'Bố cục',  icon: 'layout',  title: 'Bố cục ghép ảnh' },
+    { id: 'frame',   label: 'Khung',   icon: 'frame',   title: 'Khung viền' },
+    { id: 'sticker', label: 'Sticker', icon: 'sticker', title: 'Thư viện sticker' },
+    { id: 'text',    label: 'Chữ',     icon: 'text',    title: 'Thêm chữ' }
 ];
+
+const TEXT_FONTS = [
+    { id: 'sans',   label: 'Sans',    css: '"Be Vietnam Pro", system-ui, sans-serif' },
+    { id: 'serif',  label: 'Serif',   css: 'Georgia, "Times New Roman", serif' },
+    { id: 'mono',   label: 'Mono',    css: '"Courier New", monospace' },
+    { id: 'script', label: 'Script',  css: '"Brush Script MT", cursive' }
+];
+
+const TEXT_PRESET_COLORS = ['#ffffff', '#111111', '#ef4444', '#22c55e', '#3b82f6', '#eab308', '#ec4899'];
 
 const STICKER_TOOLBAR_ACTIONS = [
     { id: 'scale-down',   icon: 'zoomOut',     label: 'Thu nhỏ' },

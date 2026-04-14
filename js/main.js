@@ -235,6 +235,33 @@ stickerListEl.addEventListener('click', event => {
     if (!button) return;
     addStickerToEditor(button.dataset.stickerId);
 });
+// Text panel bindings
+let selectedTextColor = TEXT_PRESET_COLORS[0];
+textSizeRangeEl.addEventListener('input', event => {
+    textSizeValueEl.textContent = event.target.value;
+});
+textColorRowEl.addEventListener('click', event => {
+    const btn = event.target.closest('[data-color]');
+    if (!btn) return;
+    selectedTextColor = btn.dataset.color;
+    textColorRowEl.querySelectorAll('.text-color-swatch').forEach(el => {
+        el.classList.toggle('active', el === btn);
+    });
+});
+textAddBtnEl.addEventListener('click', () => {
+    const content = textInputEl.value;
+    if (!content.trim()) {
+        showToast('Nhập nội dung trước đã.', 2000);
+        return;
+    }
+    addTextToEditor(content, {
+        fontSize: Number(textSizeRangeEl.value),
+        fontId: textFontSelectEl.value,
+        color: selectedTextColor
+    });
+    textInputEl.value = '';
+});
+
 editorTabbarEl.addEventListener('click', event => {
     const button = event.target.closest('[data-editor-tab]');
     if (!button) return;
