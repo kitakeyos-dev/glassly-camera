@@ -161,13 +161,24 @@ const GLASS_PALETTES = [
     }
 ];
 
+// Camera filters come in two kinds:
+//  - kind 'css'  — applied via ctx.filter on the main 2D canvas, free to use
+//    when the WebGL pipeline isn't needed for anything else.
+//  - kind 'lut'  — per-channel tone curve PNG (256x3) fed into the WebGL
+//    pipeline shader; these ports originate from wuhaoyu1990/MagicCamera.
+// A 'none' filter has neither and simply shows the raw frame.
 const CAMERA_FILTERS = [
-    { id: 'none',    label: 'Gốc',    css: 'none' },
-    { id: 'bw',      label: 'Trắng đen', css: 'grayscale(1) contrast(1.12)' },
-    { id: 'sepia',   label: 'Sepia',  css: 'sepia(0.7) saturate(1.2) contrast(1.05)' },
-    { id: 'vivid',   label: 'Rực rỡ', css: 'saturate(1.65) contrast(1.1) brightness(1.05)' },
-    { id: 'cool',    label: 'Lạnh',   css: 'saturate(1.15) hue-rotate(-12deg) brightness(1.02)' },
-    { id: 'warm',    label: 'Ấm',     css: 'saturate(1.2) hue-rotate(12deg) brightness(1.03)' },
-    { id: 'dreamy',  label: 'Mơ màng', css: 'blur(0.4px) brightness(1.08) saturate(1.2)' },
-    { id: 'noir',    label: 'Noir',   css: 'grayscale(1) contrast(1.4) brightness(0.92)' }
+    { id: 'none',      label: 'Gốc',       kind: 'none' },
+    { id: 'bw',        label: 'Trắng đen', kind: 'css', css: 'grayscale(1) contrast(1.12)' },
+    { id: 'sepia',     label: 'Sepia',     kind: 'css', css: 'sepia(0.7) saturate(1.2) contrast(1.05)' },
+    { id: 'vivid',     label: 'Rực rỡ',    kind: 'css', css: 'saturate(1.65) contrast(1.1) brightness(1.05)' },
+    { id: 'cool',      label: 'Lạnh',      kind: 'css', css: 'saturate(1.15) hue-rotate(-12deg) brightness(1.02)' },
+    { id: 'warm',      label: 'Ấm',        kind: 'css', css: 'saturate(1.2) hue-rotate(12deg) brightness(1.03)' },
+    { id: 'dreamy',    label: 'Mơ màng',   kind: 'css', css: 'blur(0.4px) brightness(1.08) saturate(1.2)' },
+    { id: 'noir',      label: 'Noir',      kind: 'css', css: 'grayscale(1) contrast(1.4) brightness(0.92)' },
+    { id: 'inkwell',   label: 'Mực nho',   kind: 'lut', lut: 'assets/luts/inkwell.png' },
+    { id: 'hudson',    label: 'Hudson',    kind: 'lut', lut: 'assets/luts/hudson.png' },
+    { id: 'nashville', label: 'Nashville', kind: 'lut', lut: 'assets/luts/nashville.png' },
+    { id: 'walden',    label: 'Walden',    kind: 'lut', lut: 'assets/luts/walden.png' },
+    { id: 'lomo',      label: 'Lomo',      kind: 'lut', lut: 'assets/luts/lomo.png' }
 ];

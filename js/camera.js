@@ -189,16 +189,25 @@ function onResults(results) {
     const usesFrozenBg = frozenGlass && !activeGlass;
     const bgFilterId = usesFrozenBg ? frozenFilter : currentCameraFilter;
     const bgFilterDef = CAMERA_FILTERS.find(f => f.id === bgFilterId);
-    const bgFilterCss = bgFilterDef ? bgFilterDef.css : 'none';
+    const bgFilterKind = bgFilterDef ? bgFilterDef.kind : 'none';
+    const bgFilterCss = bgFilterKind === 'css' ? bgFilterDef.css : 'none';
+    const bgFilterLutUrl = bgFilterKind === 'lut' ? bgFilterDef.lut : null;
 
-    // Beauty filter is run through a single offscreen WebGL canvas. When the
-    // background is a frozen snapshot we still need the live frame inside the
-    // glass clip, so the draws are interleaved: render background first, then
-    // re-run the shader for results.image before drawing the glass interior.
+    // Unified pipeline: the WebGL shader runs beauty + LUT in a single draw
+    // when either is active, otherwise we just use the raw source. CSS
+    // filters stay on ctx.filter because they're cheap, GPU-accelerated, and
+    // don't need the WebGL round trip.
+    const pipelineOptions = (beautyEnabled || bgFilterLutUrl)
+        ? {
+            beauty: beautyEnabled ? { enabled: true, strength: beautyStrength } : null,
+            lut: bgFilterLutUrl ? { url: bgFilterLutUrl, mix: 1.0 } : null
+          }
+        : null;
+
     const rawBackgroundSource = usesFrozenBg ? frozenCanvas : results.image;
     let backgroundToDraw = rawBackgroundSource;
-    if (beautyEnabled) {
-        const filtered = applyBeautyFilter(rawBackgroundSource, w, h, beautyStrength);
+    if (pipelineOptions) {
+        const filtered = applyImageFilters(rawBackgroundSource, w, h, pipelineOptions);
         if (filtered) backgroundToDraw = filtered;
     }
 
@@ -208,15 +217,11 @@ function onResults(results) {
     ctx.restore();
 
     let glassInteriorSource = results.image;
-    if (beautyEnabled) {
+    if (pipelineOptions) {
         if (rawBackgroundSource === results.image) {
-            // Background already filtered results.image into beautyCanvas; the
-            // drawing buffer is still intact for the upcoming glass draws.
             glassInteriorSource = backgroundToDraw;
         } else {
-            // Frozen background used a different source, so re-run for the
-            // live frame and point the glass at the updated canvas.
-            const filtered = applyBeautyFilter(results.image, w, h, beautyStrength);
+            const filtered = applyImageFilters(results.image, w, h, pipelineOptions);
             if (filtered) glassInteriorSource = filtered;
         }
     }

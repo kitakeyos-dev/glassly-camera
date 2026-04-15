@@ -33,6 +33,11 @@ const PRECACHE_URLS = [
     'assets/frames/muahevabien.png',
     'assets/frames/polaroid_retro_90s.png',
     'assets/frames/scrapbooking.png',
+    'assets/luts/inkwell.png',
+    'assets/luts/hudson.png',
+    'assets/luts/nashville.png',
+    'assets/luts/walden.png',
+    'assets/luts/lomo.png',
     // MediaPipe scripts from CDN
     'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js',
     'https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js',
