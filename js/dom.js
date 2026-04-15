@@ -20,6 +20,7 @@ const paletteBarEl = document.getElementById('palette-bar');
 const timerToggleEl = document.getElementById('timer-toggle');
 const timerToggleLabelEl = document.getElementById('timer-toggle-label');
 const switchCameraBtnEl = document.getElementById('switch-camera-btn');
+const fullscreenBtnEl = document.getElementById('fullscreen-btn');
 const captureBtnEl = document.getElementById('capture-btn');
 const captureBtnImgEl = captureBtnEl.querySelector('img');
 const overlayBackdropEl = document.getElementById('overlay-backdrop');

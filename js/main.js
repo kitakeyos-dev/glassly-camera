@@ -111,6 +111,42 @@ switchCameraBtnEl.addEventListener('click', () => {
     switchCamera().catch(() => {});
 });
 
+// Fullscreen toggle — uses the Fullscreen API on the document element so
+// every overlay (effects sheet, history drawer, editor) inherits the
+// fullscreen viewport. iOS Safari only supports this on 16.4+ and may
+// silently reject, in which case we just leave the page in normal layout.
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function requestAppFullscreen() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+        try { req.call(el); } catch (_) {}
+    }
+}
+function exitAppFullscreen() {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) {
+        try { exit.call(document); } catch (_) {}
+    }
+}
+function updateFullscreenUI() {
+    const active = isFullscreen();
+    fullscreenBtnEl.classList.toggle('active', active);
+    fullscreenBtnEl.setAttribute(
+        'aria-label',
+        active ? 'Thoat toan man hinh' : 'Toan man hinh'
+    );
+}
+fullscreenBtnEl.addEventListener('click', () => {
+    if (isFullscreen()) exitAppFullscreen();
+    else requestAppFullscreen();
+});
+document.addEventListener('fullscreenchange', updateFullscreenUI);
+document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+updateFullscreenUI();
+
 // Countdown timer toggle (cycles 0/3/5/10 seconds)
 function updateTimerToggleLabel() {
     timerToggleLabelEl.textContent = countdownDuration > 0 ? `${countdownDuration}s` : 'Off';

@@ -182,6 +182,36 @@ body, html {
 }
 #switch-camera-btn:active { transform: scale(0.92); }
 
+#fullscreen-btn {
+    position: fixed;
+    top: max(68px, calc(env(safe-area-inset-top) + 60px));
+    left: max(16px, calc(env(safe-area-inset-left) + 10px));
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(10,12,22,0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1.1rem;
+    z-index: 30;
+    transition: transform 0.15s, background 0.15s;
+}
+#fullscreen-btn:active { transform: scale(0.92); }
+#fullscreen-btn .fullscreen-exit { display: none; }
+#fullscreen-btn.active .fullscreen-enter { display: none; }
+#fullscreen-btn.active .fullscreen-exit { display: inline-block; }
+#fullscreen-btn.active {
+    background: rgba(99,102,241,0.28);
+    border-color: rgba(99,102,241,0.7);
+}
+
 #timer-toggle {
     position: fixed;
     top: max(16px, calc(env(safe-area-inset-top) + 10px));
@@ -1455,4 +1485,72 @@ body, html {
     .editor-save-btn { padding: 0 14px; font-size: 0.85rem; }
     .sticker-tool-btn { width: 38px; height: 38px; }
     .editor-sticker-toolbar { gap: 4px; padding: 4px; }
+}
+
+/* Landscape: rotate the whole capture UI so shutter + secondary buttons
+   live on the right edge like stock phone camera apps. Every floating
+   element that anchors to bottom in portrait has to be moved out from
+   under the vertical dock. */
+@media (orientation: landscape) {
+    #capture-dock {
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: auto;
+        padding:
+            max(20px, calc(env(safe-area-inset-top) + 16px))
+            max(20px, calc(env(safe-area-inset-right) + 16px))
+            max(20px, calc(env(safe-area-inset-bottom) + 16px))
+            20px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    #save-toast {
+        top: 50%;
+        bottom: auto;
+        left: max(20px, calc(env(safe-area-inset-left) + 16px));
+        transform: translateY(-50%) translateX(-10px);
+    }
+    #save-toast.visible {
+        transform: translateY(-50%) translateX(0);
+    }
+
+    #effects-sheet {
+        top: 50%;
+        bottom: auto;
+        right: calc(112px + env(safe-area-inset-right));
+        left: auto;
+        max-width: 56vw;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 0 4px 0 12px;
+        transform: translateY(-50%) translateX(8px);
+    }
+    #effects-sheet.visible {
+        transform: translateY(-50%) translateX(0);
+    }
+
+    #help-sheet {
+        left: auto;
+        right: calc(112px + env(safe-area-inset-right));
+        max-width: min(520px, 60vw);
+        border-radius: 20px 0 0 20px;
+    }
+
+    #clear-frame-btn {
+        top: max(20px, calc(env(safe-area-inset-top) + 14px));
+    }
+
+    /* Stack the top-left controls vertically so they don't fight the
+       vertical dock on the right edge. switch / fullscreen already sit
+       on the left, move the timer toggle there too instead of the
+       top-right corner where it used to live. */
+    #timer-toggle {
+        top: max(120px, calc(env(safe-area-inset-top) + 112px));
+        right: auto;
+        left: max(16px, calc(env(safe-area-inset-left) + 10px));
+    }
 }
