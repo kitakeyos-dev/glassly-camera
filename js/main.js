@@ -460,11 +460,15 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
             .then(reg => {
-                // Poll for updates whenever the tab becomes visible
                 reg.update();
+                // Poll for updates whenever the tab becomes visible again.
                 document.addEventListener('visibilitychange', () => {
                     if (!document.hidden) reg.update();
                 });
+                // Also poll on a timer so long-running foreground sessions
+                // (especially on mobile where users rarely tab away) still
+                // pick up fresh deploys without a manual refresh.
+                setInterval(() => reg.update(), 5 * 60 * 1000);
                 // When a new SW takes control, reload the page once so the
                 // user immediately sees the latest HTML/CSS/JS.
                 let refreshing = false;

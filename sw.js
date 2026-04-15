@@ -58,21 +58,39 @@ self.addEventListener('install', event => {
     );
 });
 
-// Activate: drop any old caches that don't match the current version.
+// Activate: drop any old caches that don't match the current version,
+// then force every window client to reload. The navigate step rescues
+// users whose cached main.js pre-dates our client-side controllerchange
+// handler (commit e60cbda) — without it they would stay pinned to the
+// old bundle forever, since the old main.js has no update logic at all.
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(
-                keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-            ))
-            .then(() => self.clients.claim())
-    );
+    event.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(
+            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        );
+        await self.clients.claim();
+
+        const windowClients = await self.clients.matchAll({ type: 'window' });
+        await Promise.all(windowClients.map(client => {
+            // client.navigate is limited to top-level, same-origin clients
+            // and isn't available on every browser — swallow errors so one
+            // unsupported client can't block the rest of activate.
+            try {
+                return Promise.resolve(client.navigate(client.url)).catch(() => null);
+            } catch (_) {
+                return null;
+            }
+        }));
+    })());
 });
 
-// Fetch: cache-first with a network fallback. Successful network
-// responses for same-origin or jsdelivr requests are added to the cache
-// so MediaPipe binary models, sticker PNGs, etc. become offline after
-// first use.
+// Fetch strategy:
+//  - Navigation requests (HTML): network-first with cache fallback so a
+//    single reload on a mobile browser is enough to see a fresh deploy.
+//  - Everything else (JS/CSS/images/MediaPipe CDN): cache-first, because
+//    every asset URL is already cache-busted with ?v=<timestamp> by the
+//    deploy pipeline, so cached entries are immutable for their version.
 self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET') return;
@@ -85,6 +103,23 @@ self.addEventListener('fetch', event => {
         url.host.includes('googleapis.com');
 
     if (!isCacheable) return;
+
+    const isNavigation = req.mode === 'navigate' || req.destination === 'document';
+
+    if (isNavigation) {
+        event.respondWith(
+            fetch(req).then(resp => {
+                if (resp && (resp.ok || resp.type === 'opaque')) {
+                    const clone = resp.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(req, clone)).catch(() => {});
+                }
+                return resp;
+            }).catch(() =>
+                caches.match(req).then(cached => cached || caches.match('index.html'))
+            )
+        );
+        return;
+    }
 
     event.respondWith(
         caches.match(req).then(cached => {
