@@ -251,9 +251,13 @@ function onResults(results) {
         flashFrames--;
     }
 
-    // Surface a dedicated clear button while a glass is frozen — tapping the
-    // canvas also works, but the button makes the interaction discoverable.
-    clearFrameBtnEl.classList.toggle('visible', !!frozenGlass);
+    // Surface dedicated controls while a glass is frozen — tapping the
+    // canvas still clears, but the buttons make the interactions
+    // discoverable and also let the user reuse the frame with a different
+    // photo via the glass editor.
+    const frozen = !!frozenGlass;
+    clearFrameBtnEl.classList.toggle('visible', frozen);
+    insertPhotoBtnEl.classList.toggle('visible', frozen);
 }
 
 const hands = new Hands({

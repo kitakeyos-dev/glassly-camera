@@ -14,6 +14,91 @@ function clearFrozenFrame() {
 
 canvasEl.addEventListener('click', clearFrozenFrame);
 clearFrameBtnEl.addEventListener('click', clearFrozenFrame);
+insertPhotoBtnEl.addEventListener('click', () => {
+    openGlassEditor();
+});
+
+// Glass editor buttons + pointer interactions.
+glassEditorCloseBtnEl.addEventListener('click', closeGlassEditor);
+glassEditorSaveBtnEl.addEventListener('click', () => {
+    saveGlassEditorCapture().catch(() => {});
+});
+glassEditorUploadBtnEl.addEventListener('click', () => glassEditorUploadInputEl.click());
+glassEditorUploadInputEl.addEventListener('change', async event => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    await setGlassEditorInnerFromFile(file);
+});
+glassEditorPickerListEl.addEventListener('click', event => {
+    const btn = event.target.closest('[data-photo-id]');
+    if (!btn) return;
+    const photo = capturedPhotos.find(p => p.id === btn.dataset.photoId);
+    if (photo) setGlassEditorInnerPhoto(photo);
+});
+
+glassEditorCanvasEl.addEventListener('pointerdown', event => {
+    if (!glassEditorState.isOpen || !glassEditorState.innerPhoto) return;
+    event.preventDefault();
+    glassEditorCanvasEl.setPointerCapture(event.pointerId);
+    const point = glassEditorClientToCanvas(event);
+    glassEditorState.pointers.set(event.pointerId, point);
+
+    if (glassEditorState.pointers.size === 1) {
+        glassEditorState.dragOffsetX = point.x - glassEditorState.innerX;
+        glassEditorState.dragOffsetY = point.y - glassEditorState.innerY;
+        glassEditorCanvasEl.classList.add('dragging');
+    } else if (glassEditorState.pointers.size === 2) {
+        const [p1, p2] = Array.from(glassEditorState.pointers.values());
+        glassEditorState.pinchInitialDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        glassEditorState.pinchInitialScale = glassEditorState.innerScale;
+    }
+});
+glassEditorCanvasEl.addEventListener('pointermove', event => {
+    if (!glassEditorState.isOpen || !glassEditorState.pointers.has(event.pointerId)) return;
+    const point = glassEditorClientToCanvas(event);
+    glassEditorState.pointers.set(event.pointerId, point);
+
+    if (glassEditorState.pointers.size === 1) {
+        glassEditorState.innerX = point.x - glassEditorState.dragOffsetX;
+        glassEditorState.innerY = point.y - glassEditorState.dragOffsetY;
+        renderGlassEditor();
+    } else if (glassEditorState.pointers.size === 2) {
+        const [p1, p2] = Array.from(glassEditorState.pointers.values());
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        if (glassEditorState.pinchInitialDist > 0) {
+            const ratio = dist / glassEditorState.pinchInitialDist;
+            glassEditorState.innerScale = Math.max(
+                0.2,
+                Math.min(5.0, glassEditorState.pinchInitialScale * ratio)
+            );
+        }
+        renderGlassEditor();
+    }
+});
+function endGlassEditorPointer(event) {
+    if (!glassEditorState.pointers.has(event.pointerId)) return;
+    glassEditorState.pointers.delete(event.pointerId);
+    if (glassEditorState.pointers.size === 0) {
+        glassEditorCanvasEl.classList.remove('dragging');
+    } else if (glassEditorState.pointers.size === 1) {
+        // Transition back to drag using the remaining pointer as the new anchor.
+        const remaining = Array.from(glassEditorState.pointers.values())[0];
+        glassEditorState.dragOffsetX = remaining.x - glassEditorState.innerX;
+        glassEditorState.dragOffsetY = remaining.y - glassEditorState.innerY;
+    }
+}
+glassEditorCanvasEl.addEventListener('pointerup', endGlassEditorPointer);
+glassEditorCanvasEl.addEventListener('pointercancel', endGlassEditorPointer);
+glassEditorCanvasEl.addEventListener('wheel', event => {
+    if (!glassEditorState.isOpen || !glassEditorState.innerPhoto) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.08 : 0.92;
+    glassEditorState.innerScale = Math.max(
+        0.2,
+        Math.min(5.0, glassEditorState.innerScale * factor)
+    );
+    renderGlassEditor();
+}, { passive: false });
 
 function openHelpSheet() {
     helpSheetEl.classList.add('visible');
@@ -295,6 +380,7 @@ document.addEventListener('keydown', event => {
         closeEditor();
         closeHelpSheet();
         closeEffectsSheet();
+        if (glassEditorState.isOpen) closeGlassEditor();
         return;
     }
     if (!editorState.isOpen) return;

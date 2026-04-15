@@ -1,18 +1,19 @@
 // 3D glass drawing + progress ring
 
-function buildPath(glass) {
-    ctx.beginPath();
+function buildPath(glass, targetCtx) {
+    const c = targetCtx || ctx;
+    c.beginPath();
     if (glass.type === 'triangle') {
-        ctx.moveTo(glass.p1.x, glass.p1.y);
-        ctx.lineTo(glass.p2.x, glass.p2.y);
-        ctx.lineTo(glass.p3.x, glass.p3.y);
+        c.moveTo(glass.p1.x, glass.p1.y);
+        c.lineTo(glass.p2.x, glass.p2.y);
+        c.lineTo(glass.p3.x, glass.p3.y);
     } else if (glass.type === 'quad') {
-        ctx.moveTo(glass.tl.x, glass.tl.y);
-        ctx.lineTo(glass.tr.x, glass.tr.y);
-        ctx.lineTo(glass.br.x, glass.br.y);
-        ctx.lineTo(glass.bl.x, glass.bl.y);
+        c.moveTo(glass.tl.x, glass.tl.y);
+        c.lineTo(glass.tr.x, glass.tr.y);
+        c.lineTo(glass.br.x, glass.br.y);
+        c.lineTo(glass.bl.x, glass.bl.y);
     } else if (glass.type === 'circle') {
-        ctx.ellipse(glass.cx, glass.cy, glass.rx, glass.ry, glass.angle, 0, Math.PI * 2);
+        c.ellipse(glass.cx, glass.cy, glass.rx, glass.ry, glass.angle, 0, Math.PI * 2);
     } else if (glass.type === 'star') {
         // Ngôi sao 5 cánh
         const { cx, cy } = glass;
@@ -21,12 +22,12 @@ function buildPath(glass) {
         const spikes = 5;
         let rot = -Math.PI / 2;
         const step = Math.PI / spikes;
-        ctx.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+        c.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
         for (let i = 0; i < spikes; i++) {
             rot += step;
-            ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
+            c.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
             rot += step;
-            ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+            c.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
         }
     } else if (glass.type === 'heart') {
         const { cx, cy, rx: w, ry: h } = glass;
@@ -34,19 +35,19 @@ function buildPath(glass) {
         // Top dip sits above cy, bottom tip sits below cy.
         const topDipY   = cy - h * 0.25;
         const bottomY   = cy + h * 0.9;
-        ctx.moveTo(cx, topDipY);
-        ctx.bezierCurveTo(
+        c.moveTo(cx, topDipY);
+        c.bezierCurveTo(
             cx + w * 0.95, cy - h * 1.05,
             cx + w * 1.2,  cy + h * 0.25,
             cx,            bottomY
         );
-        ctx.bezierCurveTo(
+        c.bezierCurveTo(
             cx - w * 1.2,  cy + h * 0.25,
             cx - w * 0.95, cy - h * 1.05,
             cx,            topDipY
         );
     }
-    ctx.closePath();
+    c.closePath();
 }
 
 function drawGlass3D(liveImage, glass, progress) {

@@ -505,41 +505,63 @@ body, html {
     margin: 0 2px;
 }
 
-#clear-frame-btn {
+/* Shared base for the pair of frozen-glass action pills — same neutral
+   dark glassmorphism as #timer-toggle / .capture-dock-btn, differentiated
+   only by the icon + label. */
+#clear-frame-btn,
+#insert-photo-btn {
     position: fixed;
-    top: max(72px, calc(env(safe-area-inset-top) + 70px));
+    /* Sit below the top-left stack (switch-camera ~16px + fullscreen
+       ~68px) so the pills don't collide with them on narrow screens. */
+    top: max(124px, calc(env(safe-area-inset-top) + 118px));
     left: 50%;
-    transform: translateX(-50%) translateY(-6px);
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 8px 16px 8px 12px;
-    border: 1px solid rgba(248,113,113,0.55);
-    background: rgba(220, 38, 38, 0.22);
+    background: rgba(10, 12, 22, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    color: #fecaca;
+    color: #fff;
     font-family: inherit;
     font-size: 0.82rem;
     font-weight: 700;
+    letter-spacing: 0.02em;
     border-radius: 999px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
     cursor: pointer;
     z-index: 32;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
+#clear-frame-btn .svg-icon,
+#insert-photo-btn .svg-icon {
+    font-size: 1rem;
+}
+
+#clear-frame-btn {
+    transform: translate(calc(-50% - 96px), -6px);
+}
 #clear-frame-btn.visible {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translate(calc(-50% - 96px), 0);
     pointer-events: auto;
 }
 #clear-frame-btn:active {
-    transform: translateX(-50%) scale(0.94);
+    transform: translate(calc(-50% - 96px), 0) scale(0.94);
 }
-#clear-frame-btn .svg-icon {
-    font-size: 1rem;
+
+#insert-photo-btn {
+    transform: translate(calc(-50% + 96px), -6px);
+}
+#insert-photo-btn.visible {
+    opacity: 1;
+    transform: translate(calc(-50% + 96px), 0);
+    pointer-events: auto;
+}
+#insert-photo-btn:active {
+    transform: translate(calc(-50% + 96px), 0) scale(0.94);
 }
 
 #effects-sheet {
@@ -634,6 +656,137 @@ body, html {
     background: rgba(99,102,241,0.28);
     border-color: rgba(99,102,241,0.7);
 }
+
+/* Glass editor overlay — reuses the frozen glass shape as a clip mask so
+   the user can pick any photo (from history or upload) and drag / pinch
+   it inside the glass before saving a new capture. */
+#glass-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background:
+        radial-gradient(circle at top left, rgba(99,102,241,0.12), transparent 28%),
+        rgba(3,6,14,0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: none;
+    flex-direction: column;
+}
+#glass-editor.visible { display: flex; }
+.glass-editor-topbar {
+    flex-shrink: 0;
+    padding: max(14px, calc(env(safe-area-inset-top) + 10px)) 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.glass-editor-title {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.glass-editor-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow: hidden;
+}
+#glass-editor-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    border-radius: 14px;
+    background: #0a0a12;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    touch-action: none;
+    cursor: grab;
+}
+#glass-editor-canvas.dragging { cursor: grabbing; }
+.glass-editor-picker {
+    flex-shrink: 0;
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+    background: rgba(5,8,18,0.88);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.glass-editor-hint {
+    margin: 0 2px 8px;
+    color: rgba(255,255,255,0.58);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+.glass-editor-picker-scroll {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+}
+.glass-editor-picker-scroll::-webkit-scrollbar { display: none; }
+.glass-editor-picker-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.glass-editor-picker-empty {
+    padding: 18px 14px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.78rem;
+}
+.glass-editor-picker-item {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 0;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+}
+.glass-editor-picker-item:active { transform: scale(0.94); }
+.glass-editor-picker-item.active {
+    border-color: rgba(236,72,153,0.9);
+    box-shadow: 0 0 0 2px rgba(236,72,153,0.35);
+}
+.glass-editor-picker-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.glass-editor-upload-btn {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,0.28);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.78);
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.glass-editor-upload-btn:active { background: rgba(255,255,255,0.1); }
+.glass-editor-upload-btn .svg-icon { font-size: 1.1rem; color: var(--accent); }
 
 #save-toast {
     position: fixed;
@@ -1540,10 +1693,6 @@ body, html {
         border-radius: 20px 0 0 20px;
     }
 
-    #clear-frame-btn {
-        top: max(20px, calc(env(safe-area-inset-top) + 14px));
-    }
-
     /* Stack the top-left controls vertically so they don't fight the
        vertical dock on the right edge. switch / fullscreen already sit
        on the left, move the timer toggle there too instead of the
@@ -1552,5 +1701,13 @@ body, html {
         top: max(120px, calc(env(safe-area-inset-top) + 112px));
         right: auto;
         left: max(16px, calc(env(safe-area-inset-left) + 10px));
+    }
+
+    /* Landscape has no vertical dock on top, so the clear / insert pills
+       can sit next to the fullscreen button at the same y-level instead
+       of floating mid-screen like portrait. */
+    #clear-frame-btn,
+    #insert-photo-btn {
+        top: max(72px, calc(env(safe-area-inset-top) + 66px));
     }
 }

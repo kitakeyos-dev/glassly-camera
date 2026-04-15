@@ -21,6 +21,7 @@ const PRECACHE_URLS = [
     'js/capture.js',
     'js/webgl_beauty.js',
     'js/camera.js',
+    'js/glass_editor.js',
     'js/main.js',
     'assets/icons/camerabutton.png',
     'assets/icons/icon-192.png',
