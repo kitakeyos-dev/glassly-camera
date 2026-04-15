@@ -12,6 +12,12 @@ const glassEditorState = {
     isOpen: false,
     glass: null,
     backgroundCanvas: null,
+    // Whichever camera produced the frozen frame. Front-camera captures
+    // have the "mirror selfie" flip baked into their bitmap by
+    // saveCurrentFrame(), so picked photos need to be drawn back through
+    // the same flip to sit in the same coordinate space as the raw
+    // frozenCanvas background.
+    frozenFacingMode: 'user',
     innerPhoto: null,          // { image, id, label }
     innerX: 0,
     innerY: 0,
@@ -178,6 +184,13 @@ function drawGlassEditorScene(targetCtx, dimOutside) {
     if (glassEditorState.innerPhoto) {
         targetCtx.translate(glassEditorState.innerX, glassEditorState.innerY);
         targetCtx.scale(glassEditorState.innerScale, glassEditorState.innerScale);
+        // saveCurrentFrame flips captures from the front camera so the
+        // history thumbnail matches the mirrored live preview. Undo that
+        // flip here so the picked photo sits in the same raw orientation
+        // as the frozenCanvas background we composite it onto.
+        if (glassEditorState.frozenFacingMode === 'user') {
+            targetCtx.scale(-1, 1);
+        }
         const img = glassEditorState.innerPhoto.image;
         targetCtx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
     } else if (dimOutside) {
@@ -191,7 +204,19 @@ function drawGlassEditorScene(targetCtx, dimOutside) {
         targetCtx.textAlign = 'center';
         targetCtx.textBaseline = 'middle';
         targetCtx.font = '600 32px "Be Vietnam Pro", system-ui, sans-serif';
-        targetCtx.fillText('Chọn ảnh bên dưới', glass.cx, glass.cy);
+        // When the canvas itself is CSS-mirrored, the placeholder text
+        // would otherwise render backwards — flip it in the bitmap so
+        // the two transforms cancel and the string reads correctly.
+        const canvasMirrored = glassEditorCanvasEl.classList.contains('mirrored');
+        if (canvasMirrored) {
+            targetCtx.save();
+            targetCtx.translate(glass.cx, 0);
+            targetCtx.scale(-1, 1);
+            targetCtx.fillText('Chọn ảnh bên dưới', 0, glass.cy);
+            targetCtx.restore();
+        } else {
+            targetCtx.fillText('Chọn ảnh bên dưới', glass.cx, glass.cy);
+        }
     }
     targetCtx.restore();
 
@@ -245,6 +270,7 @@ async function openGlassEditor() {
     // Snapshot glass + frozen background so the main camera loop can keep
     // living once it restarts without corrupting the editor state.
     glassEditorState.glass = JSON.parse(JSON.stringify(frozenGlass));
+    glassEditorState.frozenFacingMode = currentFacingMode;
     const bgCanvas = document.createElement('canvas');
     bgCanvas.width = frozenCanvas.width;
     bgCanvas.height = frozenCanvas.height;
@@ -259,6 +285,15 @@ async function openGlassEditor() {
 
     glassEditorCanvasEl.width = frozenCanvas.width;
     glassEditorCanvasEl.height = frozenCanvas.height;
+    // Mirror the canvas display for front-camera captures so the editor
+    // matches the "selfie" orientation the user saw in the live preview.
+    // The inner drawing stays in raw sensor coordinates; the inserted
+    // photo + placeholder text get counter-flipped inline so they still
+    // read correctly after the CSS mirror is applied.
+    glassEditorCanvasEl.classList.toggle(
+        'mirrored',
+        glassEditorState.frozenFacingMode === 'user'
+    );
     glassEditorState.isOpen = true;
 
     stopCamera();
@@ -277,6 +312,7 @@ function closeGlassEditor() {
     glassEditorState.backgroundCanvas = null;
     glassEditorState.glass = null;
     glassEditorState.pointers.clear();
+    glassEditorCanvasEl.classList.remove('mirrored');
     glassEditorEl.classList.remove('visible');
     glassEditorEl.setAttribute('aria-hidden', 'true');
     startCamera().catch(() => {});
@@ -293,7 +329,25 @@ async function saveGlassEditorCapture() {
 
     const w = glassEditorCanvasEl.width;
     const h = glassEditorCanvasEl.height;
-    const dataUrl = glassEditorCanvasEl.toDataURL('image/jpeg', 0.9);
+
+    // When the canvas is CSS-mirrored the user's viewport shows a flipped
+    // image but the bitmap still contains raw pixels. Mirror once into a
+    // staging canvas so the exported JPEG matches what they were looking
+    // at — and lines up with every other front-camera capture in the
+    // gallery (which are all saved pre-flipped by saveCurrentFrame).
+    let exportCanvas = glassEditorCanvasEl;
+    if (glassEditorCanvasEl.classList.contains('mirrored')) {
+        const mirror = document.createElement('canvas');
+        mirror.width = w;
+        mirror.height = h;
+        const mCtx = mirror.getContext('2d');
+        mCtx.translate(w, 0);
+        mCtx.scale(-1, 1);
+        mCtx.drawImage(glassEditorCanvasEl, 0, 0);
+        exportCanvas = mirror;
+    }
+
+    const dataUrl = exportCanvas.toDataURL('image/jpeg', 0.9);
 
     const thumbScale = Math.min(1, 320 / Math.max(w, h));
     const tw = Math.max(1, Math.round(w * thumbScale));
@@ -301,7 +355,7 @@ async function saveGlassEditorCapture() {
     const thumbCanvas = document.createElement('canvas');
     thumbCanvas.width = tw;
     thumbCanvas.height = th;
-    thumbCanvas.getContext('2d').drawImage(glassEditorCanvasEl, 0, 0, tw, th);
+    thumbCanvas.getContext('2d').drawImage(exportCanvas, 0, 0, tw, th);
     const thumbUrl = thumbCanvas.toDataURL('image/jpeg', 0.78);
 
     pushCapturedPhoto(dataUrl, thumbUrl);
@@ -321,8 +375,13 @@ async function saveGlassEditorCapture() {
 
 function glassEditorClientToCanvas(event) {
     const rect = glassEditorCanvasEl.getBoundingClientRect();
-    return {
-        x: (event.clientX - rect.left) * (glassEditorCanvasEl.width / rect.width),
-        y: (event.clientY - rect.top) * (glassEditorCanvasEl.height / rect.height)
-    };
+    let x = (event.clientX - rect.left) * (glassEditorCanvasEl.width / rect.width);
+    const y = (event.clientY - rect.top) * (glassEditorCanvasEl.height / rect.height);
+    // With CSS transform: scaleX(-1) the display pixels run right-to-left
+    // relative to the bitmap, so a drag at display x=100 actually wants
+    // bitmap x = (width - 100).
+    if (glassEditorCanvasEl.classList.contains('mirrored')) {
+        x = glassEditorCanvasEl.width - x;
+    }
+    return { x, y };
 }

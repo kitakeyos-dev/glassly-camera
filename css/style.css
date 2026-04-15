@@ -710,6 +710,7 @@ body, html {
     touch-action: none;
     cursor: grab;
 }
+#glass-editor-canvas.mirrored { transform: scaleX(-1); }
 #glass-editor-canvas.dragging { cursor: grabbing; }
 .glass-editor-picker {
     flex-shrink: 0;
