@@ -449,7 +449,11 @@ editorCanvasEl.addEventListener('wheel', event => {
 // Progress 0-90% = asset downloads; 90-100% = camera + Hands init.
 const preloadAssets = [
     ...FRAME_STYLES.filter(f => f.src).map(f => f.src),
-    ...STICKER_LIBRARY.map(s => s.src)
+    ...STICKER_LIBRARY.map(s => s.src),
+    // Prime the image decode cache for every LUT filter PNG so the first
+    // time the user taps a LUT chip the WebGL pipeline can upload the
+    // texture immediately instead of waiting on a fetch + decode.
+    ...CAMERA_FILTERS.filter(f => f.kind === 'lut' && f.lut).map(f => f.lut)
 ];
 const totalAssets = preloadAssets.length;
 let loadedAssets = 0;
