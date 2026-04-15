@@ -18,4 +18,6 @@ let selectedHistoryPhotoId = null;
 let selectedHistoryPhotoIds = [];
 let beautyEnabled = false;
 let beautyStrength = 55;
+let skinWhitenEnabled = false;
+let skinWhitenStrength = 50;
 const imageCache = new Map();

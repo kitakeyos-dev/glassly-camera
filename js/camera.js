@@ -192,15 +192,19 @@ function onResults(results) {
     const bgFilterKind = bgFilterDef ? bgFilterDef.kind : 'none';
     const bgFilterCss = bgFilterKind === 'css' ? bgFilterDef.css : 'none';
     const bgFilterLutUrl = bgFilterKind === 'lut' ? bgFilterDef.lut : null;
+    const bgFilterShader = bgFilterKind === 'shader' ? bgFilterDef.shader : null;
 
-    // Unified pipeline: the WebGL shader runs beauty + LUT in a single draw
-    // when either is active, otherwise we just use the raw source. CSS
-    // filters stay on ctx.filter because they're cheap, GPU-accelerated, and
-    // don't need the WebGL round trip.
-    const pipelineOptions = (beautyEnabled || bgFilterLutUrl)
+    // Unified pipeline: the WebGL uber-shader runs beauty / skin-whiten /
+    // LUT / sketch / crayon in a single draw when at least one is active.
+    // CSS filters stay on ctx.filter because they're already GPU-accelerated
+    // and don't need the WebGL round trip.
+    const needsPipeline = beautyEnabled || skinWhitenEnabled || bgFilterLutUrl || bgFilterShader;
+    const pipelineOptions = needsPipeline
         ? {
             beauty: beautyEnabled ? { enabled: true, strength: beautyStrength } : null,
-            lut: bgFilterLutUrl ? { url: bgFilterLutUrl, mix: 1.0 } : null
+            skinWhiten: skinWhitenEnabled ? { enabled: true, strength: skinWhitenStrength } : null,
+            lut: bgFilterLutUrl ? { url: bgFilterLutUrl, mix: 1.0 } : null,
+            shader: bgFilterShader
           }
         : null;
 

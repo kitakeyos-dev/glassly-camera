@@ -579,13 +579,15 @@ body, html {
 .beauty-toggle:active {
     transform: scale(0.96);
 }
-#beauty-strength {
+#beauty-strength,
+#skin-whiten-strength {
     flex: 1;
     min-width: 0;
     accent-color: #ec4899;
     cursor: pointer;
 }
-#beauty-strength:disabled {
+#beauty-strength:disabled,
+#skin-whiten-strength:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }

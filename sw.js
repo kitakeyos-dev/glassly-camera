@@ -38,6 +38,11 @@ const PRECACHE_URLS = [
     'assets/luts/nashville.png',
     'assets/luts/walden.png',
     'assets/luts/lomo.png',
+    'assets/luts/amaro.png',
+    'assets/luts/hefe.png',
+    'assets/luts/rise.png',
+    'assets/luts/sutro.png',
+    'assets/luts/valencia.png',
     // MediaPipe scripts from CDN
     'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js',
     'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js'

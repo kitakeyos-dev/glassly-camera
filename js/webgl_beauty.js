@@ -1,18 +1,22 @@
-// WebGL image pipeline — a single fragment shader that runs beauty
-// smoothing and an optional per-channel LUT in one draw call, so the
-// camera hot loop spends at most one texImage2D upload + one draw call
-// per rendered frame regardless of how many effects are active.
+// WebGL image pipeline — a single uber fragment shader that runs beauty
+// smoothing, skin whitening, an optional per-channel LUT, and the two
+// stylized filters (sketch / crayon) in one draw call. camera.onResults
+// therefore does at most one texImage2D upload and one draw call per
+// rendered frame regardless of how many effects are active.
 //
-// Beauty section: ported from wuhaoyu1990/MagicCamera beauty.glsl
-// (20-tap green-channel blur + high-pass + 5x hard-light + luminance-
-// weighted blend).
-//
-// LUT section: a 256-wide, 3-pixel-tall curve texture like MagicCamera's
-// *map.png files. The three rows encode independent per-channel tone
-// curves (R at y=0.166, G at y=0.5, B at y=0.833). At runtime we sample
-// vec2(color.ch, rowY) and assign to the matching output channel, then
-// blend with the original by uLutMix so the selected filter can be
-// dialed down or off entirely.
+// Beauty section: ported from wuhaoyu1990/MagicCamera beauty.glsl.
+// LUT section: reads MagicCamera's 256x3 per-channel tone-curve PNGs.
+// Sketch + crayon: direct ports of sketch.glsl and crayon.glsl (both
+// pure-math shaders, no extra assets).
+// Skin whiten: a polynomial gamma curve + mild desaturation — the
+// original skinwhiten.glsl depended on a curve texture bundled with
+// the Android app, but a cheap gamma curve lands close enough to the
+// intended look without shipping another asset.
+
+const FILTER_MODE_NONE = 0;
+const FILTER_MODE_LUT = 1;
+const FILTER_MODE_SKETCH = 2;
+const FILTER_MODE_CRAYON = 3;
 
 const IMAGE_PIPELINE_FRAG_SRC = `
     precision mediump float;
@@ -23,9 +27,22 @@ const IMAGE_PIPELINE_FRAG_SRC = `
     uniform vec2 uSingleStepOffset;
     uniform float uBeautyParams;
     uniform float uBeautyMix;
+    uniform float uSkinWhitenMix;
     uniform float uLutMix;
+    uniform int uFilterMode;
+    uniform float uFilterStrength;
 
     const highp vec3 W = vec3(0.299, 0.587, 0.114);
+    const mat3 rgb2yiq = mat3(
+        0.299, 0.587, 0.114,
+        0.596, -0.275, -0.321,
+        0.212, -0.523, 0.311
+    );
+    const mat3 yiq2rgb = mat3(
+        1.0, 0.956, 0.621,
+        1.0, -0.272, -1.703,
+        1.0, -1.106, 0.0
+    );
 
     float hardLight(float color) {
         if (color <= 0.5) return color * color * 2.0;
@@ -88,6 +105,15 @@ const IMAGE_PIPELINE_FRAG_SRC = `
         return mix(smoothColor.rgb, max(smoothColor, centralColor), alpha);
     }
 
+    vec3 applySkinWhiten(vec3 color) {
+        // Gamma lift + mild desaturation — approximates the tone curve that
+        // skinwhiten.glsl reads from its curve texture.
+        float luminance = dot(color, W);
+        vec3 curved = pow(color, vec3(0.82));
+        vec3 desat = mix(curved, vec3(luminance), 0.1);
+        return desat;
+    }
+
     vec3 applyLut(vec3 color) {
         vec3 mapped;
         mapped.r = texture2D(uLut, vec2(color.r, 0.16666)).r;
@@ -96,15 +122,66 @@ const IMAGE_PIPELINE_FRAG_SRC = `
         return mapped;
     }
 
+    vec3 applySketch() {
+        vec3 oralColor = texture2D(uVideo, textureCoordinate).rgb;
+        vec3 maxValue = vec3(0.0);
+        for (int i = -2; i <= 2; i++) {
+            for (int j = -2; j <= 2; j++) {
+                vec3 tempColor = texture2D(
+                    uVideo,
+                    textureCoordinate + uSingleStepOffset * vec2(float(i), float(j))
+                ).rgb;
+                maxValue = max(maxValue, tempColor);
+            }
+        }
+        float gray1 = dot(oralColor, W);
+        float gray2 = max(dot(maxValue, W), 0.001);
+        float contour = clamp(gray1 / gray2, 0.0, 1.0);
+        return vec3(contour);
+    }
+
+    vec3 applyCrayon() {
+        vec3 oralColor = texture2D(uVideo, textureCoordinate).rgb;
+        vec3 maxValue = vec3(0.0);
+        for (int i = -2; i <= 2; i++) {
+            for (int j = -2; j <= 2; j++) {
+                vec3 tempColor = texture2D(
+                    uVideo,
+                    textureCoordinate + uSingleStepOffset * vec2(float(i), float(j))
+                ).rgb;
+                maxValue = max(maxValue, tempColor);
+            }
+        }
+        vec3 textureColor = oralColor / max(maxValue, vec3(0.001));
+        float gray = dot(textureColor, W);
+        float k = 0.223529;
+        float alpha = min(gray, k) / k;
+        textureColor = textureColor * alpha + (1.0 - alpha) * oralColor;
+        vec3 yiqColor = textureColor * rgb2yiq;
+        yiqColor.r = clamp(pow(gray, uFilterStrength), 0.0, 1.0);
+        return yiqColor * yiq2rgb;
+    }
+
     void main() {
         vec3 central = texture2D(uVideo, textureCoordinate).rgb;
         vec3 result = central;
+
         if (uBeautyMix > 0.0) {
             result = mix(central, applyBeauty(central), uBeautyMix);
         }
-        if (uLutMix > 0.0) {
-            result = mix(result, applyLut(result), uLutMix);
+        if (uSkinWhitenMix > 0.0) {
+            result = mix(result, applySkinWhiten(result), uSkinWhitenMix);
         }
+        if (uFilterMode == 1) {
+            if (uLutMix > 0.0) {
+                result = mix(result, applyLut(result), uLutMix);
+            }
+        } else if (uFilterMode == 2) {
+            result = applySketch();
+        } else if (uFilterMode == 3) {
+            result = applyCrayon();
+        }
+
         gl_FragColor = vec4(result, 1.0);
     }
 `;
@@ -131,16 +208,13 @@ let uLutLoc = null;
 let uSingleStepOffsetLoc = null;
 let uBeautyParamsLoc = null;
 let uBeautyMixLoc = null;
+let uSkinWhitenMixLoc = null;
 let uLutMixLoc = null;
+let uFilterModeLoc = null;
+let uFilterStrengthLoc = null;
 let pipelineInitFailed = false;
 
-// Cache of LUT textures keyed by url. Each entry is either a fully-loaded
-// WebGLTexture or a sentinel while the PNG is still in flight — the caller
-// simply skips the LUT pass until loading completes.
 const lutTextureCache = new Map();
-// Placeholder 1x1 RGBA texture bound to sampler slot 1 whenever no LUT is
-// selected, so the sampler stays complete and WebGL doesn't draw undefined
-// garbage into every frame.
 let pipelineNullLut = null;
 
 function compilePipelineShader(gl, type, source) {
@@ -228,7 +302,10 @@ function initPipelineGL() {
     uSingleStepOffsetLoc = gl.getUniformLocation(program, 'uSingleStepOffset');
     uBeautyParamsLoc = gl.getUniformLocation(program, 'uBeautyParams');
     uBeautyMixLoc = gl.getUniformLocation(program, 'uBeautyMix');
+    uSkinWhitenMixLoc = gl.getUniformLocation(program, 'uSkinWhitenMix');
     uLutMixLoc = gl.getUniformLocation(program, 'uLutMix');
+    uFilterModeLoc = gl.getUniformLocation(program, 'uFilterMode');
+    uFilterStrengthLoc = gl.getUniformLocation(program, 'uFilterStrength');
 
     return gl;
 }
@@ -238,9 +315,6 @@ function beautyStrengthToParams(strength) {
     return 5.0 - 4.5 * (clamped / 100);
 }
 
-// Kick off a lazy fetch of a LUT PNG and register the resulting texture in
-// the cache. Subsequent calls return the same cached WebGLTexture once the
-// PNG finishes decoding.
 function getLutTexture(url) {
     const gl = pipelineGL;
     if (!gl || !url) return null;
@@ -273,17 +347,28 @@ function getLutTexture(url) {
     return null;
 }
 
-// Run the combined pipeline. `options.beauty` = { enabled, strength }.
-// `options.lut` = { url, mix } where mix is in [0,1] and url is one of the
-// entries in assets/luts/. Returns the offscreen canvas if any effect ran,
-// otherwise null so the caller can fall through to the raw source.
+// Run the combined pipeline. options = {
+//   beauty:     { enabled, strength: 0-100 } | null,
+//   skinWhiten: { enabled, strength: 0-100 } | null,
+//   lut:        { url, mix: 0..1 }           | null,
+//   shader:     'sketch' | 'crayon'          | null,
+// }
+// Returns the offscreen canvas when at least one effect is active, or null
+// so the caller can fall through to the raw source.
 function applyImageFilters(source, width, height, options) {
     if (!width || !height) return null;
     const beauty = options && options.beauty;
+    const skinWhiten = options && options.skinWhiten;
     const lut = options && options.lut;
+    const shader = options && options.shader;
+
     const beautyOn = !!(beauty && beauty.enabled);
+    const skinWhitenOn = !!(skinWhiten && skinWhiten.enabled);
     const lutOn = !!(lut && lut.url && lut.mix > 0);
-    if (!beautyOn && !lutOn) return null;
+    const sketchOn = shader === 'sketch';
+    const crayonOn = shader === 'crayon';
+
+    if (!beautyOn && !skinWhitenOn && !lutOn && !sketchOn && !crayonOn) return null;
 
     const gl = initPipelineGL();
     if (!gl) return null;
@@ -291,9 +376,7 @@ function applyImageFilters(source, width, height, options) {
     let lutTexture = null;
     if (lutOn) {
         lutTexture = getLutTexture(lut.url);
-        if (!lutTexture && !beautyOn) {
-            // LUT not decoded yet and nothing else to draw — skip this frame
-            // and let the next frame try again.
+        if (!lutTexture && !beautyOn && !skinWhitenOn && !sketchOn && !crayonOn) {
             return null;
         }
     }
@@ -319,12 +402,29 @@ function applyImageFilters(source, width, height, options) {
     gl.uniform1i(uLutLoc, 1);
 
     gl.uniform2f(uSingleStepOffsetLoc, 1.0 / width, 1.0 / height);
+
     gl.uniform1f(
         uBeautyParamsLoc,
         beautyOn ? beautyStrengthToParams(beauty.strength) : 5.0
     );
     gl.uniform1f(uBeautyMixLoc, beautyOn ? 1.0 : 0.0);
-    gl.uniform1f(uLutMixLoc, lutOn && lutTexture ? lut.mix : 0.0);
+
+    // Skin whiten strength maps 0..100 → 0..0.9 mix so even at max the skin
+    // never turns completely flat/desaturated.
+    gl.uniform1f(
+        uSkinWhitenMixLoc,
+        skinWhitenOn ? Math.max(0, Math.min(100, skinWhiten.strength)) / 100 * 0.9 : 0.0
+    );
+
+    let filterMode = FILTER_MODE_NONE;
+    if (sketchOn) filterMode = FILTER_MODE_SKETCH;
+    else if (crayonOn) filterMode = FILTER_MODE_CRAYON;
+    else if (lutOn && lutTexture) filterMode = FILTER_MODE_LUT;
+    gl.uniform1i(uFilterModeLoc, filterMode);
+    gl.uniform1f(uLutMixLoc, (filterMode === FILTER_MODE_LUT) ? lut.mix : 0.0);
+    // Crayon uses a gamma exponent; 2.5 is a balanced default that matches
+    // MagicCamera's reference look.
+    gl.uniform1f(uFilterStrengthLoc, crayonOn ? 2.5 : 1.0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, pipelineQuadBuffer);
     gl.enableVertexAttribArray(pipelinePosAttr);
@@ -336,8 +436,7 @@ function applyImageFilters(source, width, height, options) {
     return pipelineCanvas;
 }
 
-// Back-compat alias so any older call site keeps working; camera.js now
-// calls applyImageFilters directly.
+// Back-compat alias kept in case any older call site still references it.
 function applyBeautyFilter(source, width, height, strength) {
     return applyImageFilters(source, width, height, {
         beauty: { enabled: true, strength }

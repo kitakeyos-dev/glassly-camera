@@ -67,6 +67,24 @@ beautyStrengthEl.addEventListener('input', event => {
 });
 updateBeautyUI();
 
+// Skin whiten controls (paired with beauty above, same control layout).
+function updateSkinWhitenUI() {
+    skinWhitenToggleEl.textContent = skinWhitenEnabled ? 'Bật' : 'Tắt';
+    skinWhitenToggleEl.classList.toggle('active', skinWhitenEnabled);
+    skinWhitenToggleEl.setAttribute('aria-pressed', String(skinWhitenEnabled));
+    skinWhitenStrengthEl.disabled = !skinWhitenEnabled;
+    skinWhitenStrengthValueEl.textContent = String(skinWhitenStrength);
+}
+skinWhitenToggleEl.addEventListener('click', () => {
+    skinWhitenEnabled = !skinWhitenEnabled;
+    updateSkinWhitenUI();
+});
+skinWhitenStrengthEl.addEventListener('input', event => {
+    skinWhitenStrength = Number(event.target.value);
+    skinWhitenStrengthValueEl.textContent = String(skinWhitenStrength);
+});
+updateSkinWhitenUI();
+
 historyUploadBtnEl.addEventListener('click', () => uploadHistoryInputEl.click());
 uploadHistoryInputEl.addEventListener('change', async event => {
     const file = event.target.files && event.target.files[0];

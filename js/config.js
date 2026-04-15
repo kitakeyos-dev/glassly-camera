@@ -161,11 +161,14 @@ const GLASS_PALETTES = [
     }
 ];
 
-// Camera filters come in two kinds:
-//  - kind 'css'  — applied via ctx.filter on the main 2D canvas, free to use
-//    when the WebGL pipeline isn't needed for anything else.
-//  - kind 'lut'  — per-channel tone curve PNG (256x3) fed into the WebGL
-//    pipeline shader; these ports originate from wuhaoyu1990/MagicCamera.
+// Camera filters come in three kinds:
+//  - kind 'css'    — applied via ctx.filter on the main 2D canvas, free when
+//    the WebGL pipeline isn't needed for anything else.
+//  - kind 'lut'    — per-channel tone curve PNG (256x3) fed into the WebGL
+//    pipeline shader; ports of MagicCamera's *map.png files.
+//  - kind 'shader' — pure-math stylized fragment shader paths compiled into
+//    the pipeline uber-shader (sketch, crayon — ported from MagicCamera's
+//    sketch.glsl / crayon.glsl).
 // A 'none' filter has neither and simply shows the raw frame.
 const CAMERA_FILTERS = [
     { id: 'none',      label: 'Gốc',       kind: 'none' },
@@ -180,5 +183,12 @@ const CAMERA_FILTERS = [
     { id: 'hudson',    label: 'Hudson',    kind: 'lut', lut: 'assets/luts/hudson.png' },
     { id: 'nashville', label: 'Nashville', kind: 'lut', lut: 'assets/luts/nashville.png' },
     { id: 'walden',    label: 'Walden',    kind: 'lut', lut: 'assets/luts/walden.png' },
-    { id: 'lomo',      label: 'Lomo',      kind: 'lut', lut: 'assets/luts/lomo.png' }
+    { id: 'lomo',      label: 'Lomo',      kind: 'lut', lut: 'assets/luts/lomo.png' },
+    { id: 'amaro',     label: 'Amaro',     kind: 'lut', lut: 'assets/luts/amaro.png' },
+    { id: 'hefe',      label: 'Hefe',      kind: 'lut', lut: 'assets/luts/hefe.png' },
+    { id: 'rise',      label: 'Rise',      kind: 'lut', lut: 'assets/luts/rise.png' },
+    { id: 'sutro',     label: 'Sutro',     kind: 'lut', lut: 'assets/luts/sutro.png' },
+    { id: 'valencia',  label: 'Valencia',  kind: 'lut', lut: 'assets/luts/valencia.png' },
+    { id: 'sketch',    label: 'Nét chì',   kind: 'shader', shader: 'sketch' },
+    { id: 'crayon',    label: 'Sáp màu',   kind: 'shader', shader: 'crayon' }
 ];
