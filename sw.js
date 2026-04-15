@@ -19,6 +19,7 @@ const PRECACHE_URLS = [
     'js/glass.js',
     'js/gestures.js',
     'js/capture.js',
+    'js/webgl_beauty.js',
     'js/camera.js',
     'js/main.js',
     'assets/icons/camerabutton.png',

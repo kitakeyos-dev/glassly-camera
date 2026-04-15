@@ -191,6 +191,14 @@
 
 <div id="effects-sheet" aria-hidden="true">
     <div class="effects-group">
+        <span class="effects-group-label">Làm đẹp da</span>
+        <div class="beauty-controls">
+            <button id="beauty-toggle" type="button" class="beauty-toggle" aria-pressed="false">Tắt</button>
+            <input id="beauty-strength" type="range" min="0" max="100" step="5" value="55" aria-label="Muc do lam dep">
+            <span id="beauty-strength-value" class="beauty-strength-value">55</span>
+        </div>
+    </div>
+    <div class="effects-group">
         <span class="effects-group-label">Chất liệu kính</span>
         <div id="palette-bar" aria-label="Chat lieu kinh"></div>
     </div>
@@ -276,6 +284,7 @@
 <script defer src="js/glass.js"></script>
 <script defer src="js/gestures.js"></script>
 <script defer src="js/capture.js"></script>
+<script defer src="js/webgl_beauty.js"></script>
 <script defer src="js/camera.js"></script>
 <script defer src="js/main.js"></script>
 </body>

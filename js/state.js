@@ -16,4 +16,6 @@ let currentFacingMode = 'user';
 let capturedPhotos = [];
 let selectedHistoryPhotoId = null;
 let selectedHistoryPhotoIds = [];
+let beautyEnabled = false;
+let beautyStrength = 55;
 const imageCache = new Map();

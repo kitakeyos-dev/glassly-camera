@@ -49,6 +49,24 @@ effectsBtnEl.addEventListener('click', () => {
     }
 });
 
+// Beauty filter controls
+function updateBeautyUI() {
+    beautyToggleEl.textContent = beautyEnabled ? 'Bật' : 'Tắt';
+    beautyToggleEl.classList.toggle('active', beautyEnabled);
+    beautyToggleEl.setAttribute('aria-pressed', String(beautyEnabled));
+    beautyStrengthEl.disabled = !beautyEnabled;
+    beautyStrengthValueEl.textContent = String(beautyStrength);
+}
+beautyToggleEl.addEventListener('click', () => {
+    beautyEnabled = !beautyEnabled;
+    updateBeautyUI();
+});
+beautyStrengthEl.addEventListener('input', event => {
+    beautyStrength = Number(event.target.value);
+    beautyStrengthValueEl.textContent = String(beautyStrength);
+});
+updateBeautyUI();
+
 historyUploadBtnEl.addEventListener('click', () => uploadHistoryInputEl.click());
 uploadHistoryInputEl.addEventListener('change', async event => {
     const file = event.target.files && event.target.files[0];

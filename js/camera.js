@@ -191,17 +191,42 @@ function onResults(results) {
     const bgFilterDef = CAMERA_FILTERS.find(f => f.id === bgFilterId);
     const bgFilterCss = bgFilterDef ? bgFilterDef.css : 'none';
 
+    // Beauty filter is run through a single offscreen WebGL canvas. When the
+    // background is a frozen snapshot we still need the live frame inside the
+    // glass clip, so the draws are interleaved: render background first, then
+    // re-run the shader for results.image before drawing the glass interior.
+    const rawBackgroundSource = usesFrozenBg ? frozenCanvas : results.image;
+    let backgroundToDraw = rawBackgroundSource;
+    if (beautyEnabled) {
+        const filtered = applyBeautyFilter(rawBackgroundSource, w, h, beautyStrength);
+        if (filtered) backgroundToDraw = filtered;
+    }
+
     ctx.save();
     ctx.filter = bgFilterCss;
-    ctx.drawImage(usesFrozenBg ? frozenCanvas : results.image, 0, 0, w, h);
+    ctx.drawImage(backgroundToDraw, 0, 0, w, h);
     ctx.restore();
 
+    let glassInteriorSource = results.image;
+    if (beautyEnabled) {
+        if (rawBackgroundSource === results.image) {
+            // Background already filtered results.image into beautyCanvas; the
+            // drawing buffer is still intact for the upcoming glass draws.
+            glassInteriorSource = backgroundToDraw;
+        } else {
+            // Frozen background used a different source, so re-run for the
+            // live frame and point the glass at the updated canvas.
+            const filtered = applyBeautyFilter(results.image, w, h, beautyStrength);
+            if (filtered) glassInteriorSource = filtered;
+        }
+    }
+
     if (frozenGlass && !activeGlass) {
-        drawGlass3D(results.image, frozenGlass, 1.0);
+        drawGlass3D(glassInteriorSource, frozenGlass, 1.0);
     }
 
     if (activeGlass && !isCooldown) {
-        drawGlass3D(results.image, activeGlass, currentProgress);
+        drawGlass3D(glassInteriorSource, activeGlass, currentProgress);
     }
 
     if (results.multiHandLandmarks && !frozenGlass) {

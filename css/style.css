@@ -546,6 +546,58 @@ body, html {
     padding: 0 6px;
     text-shadow: 0 2px 6px rgba(0,0,0,0.55);
 }
+.beauty-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    background: rgba(10,12,22,0.62);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.beauty-toggle {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.82);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.beauty-toggle.active {
+    background: rgba(236,72,153,0.32);
+    border-color: rgba(236,72,153,0.7);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(236,72,153,0.28);
+}
+.beauty-toggle:active {
+    transform: scale(0.96);
+}
+#beauty-strength {
+    flex: 1;
+    min-width: 0;
+    accent-color: #ec4899;
+    cursor: pointer;
+}
+#beauty-strength:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.beauty-strength-value {
+    flex-shrink: 0;
+    width: 2.2em;
+    text-align: right;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
 #effects-btn.active {
     background: rgba(99,102,241,0.28);
     border-color: rgba(99,102,241,0.7);
