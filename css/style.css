@@ -605,9 +605,9 @@ body, html {
 
 #save-toast {
     position: fixed;
-    top: max(76px, calc(env(safe-area-inset-top) + 70px));
+    bottom: calc(200px + env(safe-area-inset-bottom));
     left: 50%;
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateX(-50%) translateY(10px);
     background: rgba(34, 197, 94, 0.2);
     border: 1px solid rgba(34, 197, 94, 0.5);
     backdrop-filter: blur(8px);
