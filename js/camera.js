@@ -269,17 +269,16 @@ const preferredCameraResolution = getPreferredCameraResolution();
 let cameraRunning = false;
 let resumeCameraAfterVisibility = false;
 let cameraStartPromise = null;
+let cameraSwitching = false;
 
-function makeCamera() {
-    return new Camera(videoEl, {
-        onFrame: async () => { await hands.send({ image: videoEl }); },
-        width: preferredCameraResolution.width,
-        height: preferredCameraResolution.height,
-        facingMode: currentFacingMode,
-    });
-}
-
-let camera = makeCamera();
+// We run our own capture loop instead of MediaPipe's Camera helper because
+// that helper keeps an internal RAF recursion alive via captured closures
+// even after stop(), so a front→back→front sequence quickly ends up with
+// two or three overlapping `hands.send` streams queueing through the WASM
+// backend, which is the observable lag. This loop owns a single token so
+// stop() can cut the chain cleanly.
+let captureLoopToken = 0;
+let captureLoopInFlight = null;
 
 function handleCameraError(err) {
     console.error('Camera error:', err);
@@ -289,16 +288,72 @@ function handleCameraError(err) {
     resumeCameraAfterVisibility = false;
 }
 
+async function openCameraStream() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            facingMode: currentFacingMode,
+            width: { ideal: preferredCameraResolution.width },
+            height: { ideal: preferredCameraResolution.height }
+        }
+    });
+    videoEl.srcObject = stream;
+    videoEl.muted = true;
+    videoEl.setAttribute('playsinline', '');
+    // Wait for the first frame to land before kicking the capture loop so
+    // hands.send doesn't see a 0x0 video element.
+    if (videoEl.readyState < 2) {
+        await new Promise((resolve, reject) => {
+            const onReady = () => {
+                videoEl.removeEventListener('loadeddata', onReady);
+                videoEl.removeEventListener('error', onError);
+                resolve();
+            };
+            const onError = e => {
+                videoEl.removeEventListener('loadeddata', onReady);
+                videoEl.removeEventListener('error', onError);
+                reject(e);
+            };
+            videoEl.addEventListener('loadeddata', onReady, { once: true });
+            videoEl.addEventListener('error', onError, { once: true });
+        });
+    }
+    try { await videoEl.play(); } catch (_) {}
+    return stream;
+}
+
+function runCaptureLoop(token) {
+    const tick = async () => {
+        if (token !== captureLoopToken) return;
+        if (videoEl.videoWidth && videoEl.videoHeight) {
+            try {
+                captureLoopInFlight = hands.send({ image: videoEl });
+                await captureLoopInFlight;
+            } catch (err) {
+                if (token !== captureLoopToken) return;
+                console.warn('hands.send failed:', err);
+            } finally {
+                captureLoopInFlight = null;
+            }
+        }
+        if (token !== captureLoopToken) return;
+        requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
 async function startCamera() {
     if (cameraRunning) return;
     if (cameraStartPromise) return cameraStartPromise;
 
-    cameraStartPromise = camera.start()
-        .then(() => {
-            cameraRunning = true;
-            resumeCameraAfterVisibility = true;
-            errorEl.classList.remove('visible');
-        })
+    cameraStartPromise = (async () => {
+        await openCameraStream();
+        cameraRunning = true;
+        resumeCameraAfterVisibility = true;
+        errorEl.classList.remove('visible');
+        const token = ++captureLoopToken;
+        runCaptureLoop(token);
+    })()
         .catch(err => {
             handleCameraError(err);
             throw err;
@@ -311,31 +366,48 @@ async function startCamera() {
 }
 
 async function switchCamera() {
+    if (cameraSwitching) return;
+    cameraSwitching = true;
     const prev = currentFacingMode;
     const next = prev === 'user' ? 'environment' : 'user';
-    stopCamera();
-    currentFacingMode = next;
-    camera = makeCamera();
     try {
+        await stopCamera();
+        currentFacingMode = next;
         await startCamera();
         canvasEl.classList.toggle('no-mirror', next === 'environment');
     } catch (error) {
-        // Rollback if device doesn't have the requested camera
+        // Rollback if the requested lens isn't available on this device.
+        try { await stopCamera(); } catch (_) {}
         currentFacingMode = prev;
-        camera = makeCamera();
-        await startCamera();
-        canvasEl.classList.toggle('no-mirror', prev === 'environment');
+        try {
+            await startCamera();
+            canvasEl.classList.toggle('no-mirror', prev === 'environment');
+        } catch (_) {}
         showToast('Không tìm thấy camera này.', 2400);
+    } finally {
+        cameraSwitching = false;
     }
 }
 
-function stopCamera() {
-    try {
-        camera.stop();
-    } catch (error) {
-        console.error('Camera stop error:', error);
+// Fully release the camera: cut the capture loop, wait for any in-flight
+// hands.send to drain, stop every MediaStreamTrack, and detach the video
+// element. The 80ms tail gives mobile sensors a beat to actually release
+// before the next getUserMedia picks up the other lens.
+async function stopCamera() {
+    captureLoopToken++;
+    if (captureLoopInFlight) {
+        try { await captureLoopInFlight; } catch (_) {}
+    }
+    const stream = videoEl.srcObject;
+    if (stream && typeof stream.getTracks === 'function') {
+        videoEl.srcObject = null;
+        for (const track of stream.getTracks()) {
+            try { track.stop(); } catch (_) {}
+        }
     }
     cameraRunning = false;
+    cameraStartPromise = null;
+    await new Promise(resolve => setTimeout(resolve, 80));
 }
 
 document.addEventListener('visibilitychange', () => {
