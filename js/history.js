@@ -104,7 +104,6 @@ function renderHistoryDrawer() {
 
 function openHistoryDrawer() {
     currentMode = 'history';
-    toggleModeMenu(false);
     historyDrawerEl.classList.add('visible');
     historyDrawerEl.setAttribute('aria-hidden', 'false');
     renderHistoryDrawer();
@@ -114,7 +113,7 @@ function openHistoryDrawer() {
 function closeHistoryDrawer() {
     historyDrawerEl.classList.remove('visible');
     historyDrawerEl.setAttribute('aria-hidden', 'true');
-    if (!researchModalEl.classList.contains('visible')) currentMode = 'glasses';
+    currentMode = 'glasses';
     updateOverlayBackdrop();
 }
 

@@ -60,34 +60,7 @@ function downloadDataUrl(dataUrl, filename) {
 }
 
 function updateOverlayBackdrop() {
-    const visible =
-        modeMenuEl.classList.contains('visible') ||
-        historyDrawerEl.classList.contains('visible') ||
-        researchModalEl.classList.contains('visible');
-
-    overlayBackdropEl.classList.toggle('visible', visible);
-}
-
-function toggleModeMenu(force) {
-    const shouldOpen = typeof force === 'boolean' ? force : !modeMenuEl.classList.contains('visible');
-    modeMenuEl.classList.toggle('visible', shouldOpen);
-    modeMenuEl.setAttribute('aria-hidden', String(!shouldOpen));
-    updateOverlayBackdrop();
-}
-
-function closeResearchModal() {
-    researchModalEl.classList.remove('visible');
-    researchModalEl.setAttribute('aria-hidden', 'true');
-    if (!historyDrawerEl.classList.contains('visible')) currentMode = 'glasses';
-    updateOverlayBackdrop();
-}
-
-function openResearchModal() {
-    currentMode = 'photobook';
-    toggleModeMenu(false);
-    researchModalEl.classList.add('visible');
-    researchModalEl.setAttribute('aria-hidden', 'false');
-    updateOverlayBackdrop();
+    overlayBackdropEl.classList.toggle('visible', historyDrawerEl.classList.contains('visible'));
 }
 
 

@@ -1,6 +1,8 @@
 // Event bindings and startup
 
-canvasEl.addEventListener('click', () => {
+const ONBOARDED_STORAGE_KEY = 'glassly-onboarded';
+
+function clearFrozenFrame() {
     if (!frozenGlass && !isCooldown) return;
     frozenGlass = null;
     activeGlass = null;
@@ -8,7 +10,10 @@ canvasEl.addEventListener('click', () => {
     snapTimer = 0;
     isCooldown = false;
     updateGestureTag(null);
-});
+}
+
+canvasEl.addEventListener('click', clearFrozenFrame);
+clearFrameBtnEl.addEventListener('click', clearFrozenFrame);
 
 function openHelpSheet() {
     helpSheetEl.classList.add('visible');
@@ -17,10 +22,45 @@ function openHelpSheet() {
 function closeHelpSheet() {
     helpSheetEl.classList.remove('visible');
     helpSheetEl.setAttribute('aria-hidden', 'true');
+    // Mark the user as onboarded the first time they dismiss the help sheet,
+    // regardless of whether we opened it automatically or they tapped the ? button.
+    try { localStorage.setItem(ONBOARDED_STORAGE_KEY, '1'); } catch (_) {}
 }
 helpBtnEl.addEventListener('click', openHelpSheet);
 helpCloseBtnEl.addEventListener('click', closeHelpSheet);
 historyShortcutBtnEl.addEventListener('click', openHistoryDrawer);
+
+// Effects sheet (filter + palette combined)
+function openEffectsSheet(tab) {
+    effectsSheetEl.classList.add('visible');
+    effectsSheetEl.setAttribute('aria-hidden', 'false');
+    if (tab) setEffectsTab(tab);
+}
+function closeEffectsSheet() {
+    effectsSheetEl.classList.remove('visible');
+    effectsSheetEl.setAttribute('aria-hidden', 'true');
+}
+function setEffectsTab(tabId) {
+    effectsTabButtons.forEach(btn => {
+        const active = btn.dataset.effectsTab === tabId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', String(active));
+    });
+    effectsPanels.forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.effectsPanel === tabId);
+    });
+}
+effectsBtnEl.addEventListener('click', () => {
+    if (effectsSheetEl.classList.contains('visible')) {
+        closeEffectsSheet();
+    } else {
+        openEffectsSheet();
+    }
+});
+effectsCloseBtnEl.addEventListener('click', closeEffectsSheet);
+effectsTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => setEffectsTab(btn.dataset.effectsTab));
+});
 
 historyUploadBtnEl.addEventListener('click', () => uploadHistoryInputEl.click());
 uploadHistoryInputEl.addEventListener('change', async event => {
@@ -153,14 +193,9 @@ captureBtnEl.addEventListener('pointercancel', () => {
 captureBtnEl.addEventListener('pointerleave', () => {
     if (burstIntervalId) stopBurst();
 });
-historyModeBtnEl.addEventListener('click', openHistoryDrawer);
-photobookModeBtnEl.addEventListener('click', openResearchModal);
 historyCloseBtnEl.addEventListener('click', closeHistoryDrawer);
-researchCloseBtnEl.addEventListener('click', closeResearchModal);
 overlayBackdropEl.addEventListener('click', () => {
-    toggleModeMenu(false);
     closeHistoryDrawer();
-    closeResearchModal();
 });
 historyListEl.addEventListener('click', event => {
     const toggle = event.target.closest('[data-toggle-photo-id]');
@@ -195,18 +230,12 @@ historyDeleteBtnEl.addEventListener('click', () => {
 });
 historyEditBtnEl.addEventListener('click', openEditorFromHistory);
 historyClearSelectionBtnEl.addEventListener('click', clearHistoryPhotoSelection);
-document.addEventListener('click', event => {
-    if (!modeMenuEl.classList.contains('visible')) return;
-    if (modeMenuEl.contains(event.target)) return;
-    toggleModeMenu(false);
-});
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
-        toggleModeMenu(false);
         closeHistoryDrawer();
-        closeResearchModal();
         closeEditor();
         closeHelpSheet();
+        closeEffectsSheet();
         return;
     }
     if (!editorState.isOpen) return;
@@ -427,6 +456,16 @@ if (totalAssets === 0) {
 }
 
 startCamera().catch(() => {});
+
+// First-time onboarding — auto-open the help sheet on first visit so the user
+// actually discovers the gesture system instead of staring at a camera feed.
+try {
+    if (!localStorage.getItem(ONBOARDED_STORAGE_KEY)) {
+        openHelpSheet();
+    }
+} catch (_) {
+    // localStorage can throw in private mode — skip onboarding silently.
+}
 
 // Register PWA service worker
 if ('serviceWorker' in navigator) {

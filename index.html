@@ -56,18 +56,6 @@
     <p>Vui lòng cho phép truy cập camera trong cài đặt trình duyệt rồi tải lại trang.</p>
 </div>
 
-<div id="mode-menu" aria-hidden="true">
-    <div class="menu-title">Danh sách chế độ</div>
-    <button class="menu-item" id="history-mode-btn" type="button">
-        <strong>Lịch sử ảnh chụp</strong>
-        <small>Xem 10 ảnh gần nhất, chọn lại ảnh cần chỉnh sửa ở bước tiếp theo.</small>
-    </button>
-    <button class="menu-item" id="photobook-mode-btn" type="button">
-        <strong>Khung ảnh Photobook</strong>
-        <small>Hiện đang trong quá trình nghiên cứu.</small>
-    </button>
-</div>
-
 <div id="overlay-backdrop" aria-hidden="true"></div>
 
 <aside id="history-drawer" aria-hidden="true">
@@ -102,14 +90,6 @@
         </div>
     </div>
 </aside>
-
-<div id="research-modal" aria-hidden="true">
-    <div class="research-card">
-        <h3>Khung ảnh Photobook</h3>
-        <p>Hiện đang trong quá trình nghiên cứu. Ở bước sau tôi sẽ nối phần chọn khung PNG trong thư mục <code>khungphotobook</code> và luồng chụp nhiều tấm.</p>
-        <button id="research-close-btn" type="button">Đóng</button>
-    </div>
-</div>
 
 <section id="editor-overlay" aria-hidden="true">
     <div class="editor-shell">
@@ -204,12 +184,37 @@
     <span id="timer-toggle-label">3s</span>
 </button>
 
-<div id="palette-bar" aria-label="Chat lieu kinh"></div>
-<div id="filter-bar" aria-label="Bo loc camera"></div>
+<button id="clear-frame-btn" type="button" aria-label="Bo khung kinh dang hien">
+    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <span>Bỏ khung</span>
+</button>
+
+<div id="effects-sheet" aria-hidden="true">
+    <div class="bottom-sheet-header">
+        <span class="bottom-sheet-handle"></span>
+        <h4 class="bottom-sheet-title">Hiệu ứng</h4>
+        <button id="effects-close-btn" class="bottom-sheet-close editor-icon-btn" type="button" aria-label="Dong"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <nav class="effects-tabbar" role="tablist">
+        <button class="effects-tab active" type="button" role="tab" data-effects-tab="filter" aria-selected="true">Bộ lọc camera</button>
+        <button class="effects-tab" type="button" role="tab" data-effects-tab="palette" aria-selected="false">Chất liệu kính</button>
+    </nav>
+    <div class="effects-body">
+        <div class="effects-panel active" data-effects-panel="filter">
+            <div id="filter-bar" aria-label="Bo loc camera"></div>
+        </div>
+        <div class="effects-panel" data-effects-panel="palette">
+            <div id="palette-bar" aria-label="Chat lieu kinh"></div>
+        </div>
+    </div>
+</div>
 
 <div id="capture-dock">
     <button id="help-btn" class="capture-dock-btn" type="button" aria-label="Huong dan cu chi">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+    <button id="effects-btn" class="capture-dock-btn" type="button" aria-label="Hieu ung va bo loc">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/><path d="m5.6 5.6 1.4 1.4"/><path d="m17 17 1.4 1.4"/><path d="m5.6 18.4 1.4-1.4"/><path d="m17 7 1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
     </button>
     <button id="capture-btn" type="button" aria-label="Chup va luu anh">
         <img src="assets/icons/camerabutton.png" alt="">

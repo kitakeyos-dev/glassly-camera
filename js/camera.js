@@ -216,6 +216,10 @@ function onResults(results) {
         ctx.fillRect(0, 0, w, h);
         flashFrames--;
     }
+
+    // Surface a dedicated clear button while a glass is frozen — tapping the
+    // canvas also works, but the button makes the interaction discoverable.
+    clearFrameBtnEl.classList.toggle('visible', !!frozenGlass);
 }
 
 const hands = new Hands({
