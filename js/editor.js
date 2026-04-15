@@ -1,5 +1,64 @@
 // Editor overlay, stickers, drag/eraser logic
 
+// Baseline portrait dimensions the kawaii PNG frame assets were authored for.
+// Slot aspects throughout the editor are tuned against this 4:5 ratio.
+const EDITOR_BASE_WIDTH = 1080;
+const EDITOR_BASE_HEIGHT = 1350;
+const EDITOR_BASE_ASPECT = EDITOR_BASE_WIDTH / EDITOR_BASE_HEIGHT;
+// If |canvasAspect - 4:5| exceeds this threshold, PNG frames are drawn per
+// slot instead of stretched to the outer canvas.
+const FRAME_TILE_ASPECT_TOLERANCE = 0.15;
+
+// The visible and export canvases must always have the same dimensions as
+// each other, and must match the currently active layout so the PNG frame
+// assets (authored for ~4:5) never get visibly distorted.
+function getEditorCanvasSize(layout, photoCount) {
+    if (photoCount <= 1) {
+        return { width: EDITOR_BASE_WIDTH, height: EDITOR_BASE_HEIGHT };
+    }
+    if (layout === 'split-v') {
+        // Two photos side by side — each slot lands at ~1080x1350 (4:5).
+        return { width: EDITOR_BASE_WIDTH * 2, height: EDITOR_BASE_HEIGHT };
+    }
+    if (layout === 'split-h') {
+        // Two photos stacked — each slot lands at ~1080x1350 (4:5).
+        return { width: EDITOR_BASE_WIDTH, height: EDITOR_BASE_HEIGHT * 2 };
+    }
+    // 'single', 'grid' (2x2 subdivision), and the 3-photo fallback all keep
+    // slot aspect close to 4:5 on the base canvas, so no resize is needed.
+    return { width: EDITOR_BASE_WIDTH, height: EDITOR_BASE_HEIGHT };
+}
+
+function syncEditorCanvasSize({ remapStickers = false } = {}) {
+    const photoCount = editorState.selectedPhotoIds.length;
+    const target = getEditorCanvasSize(editorState.collageLayout, photoCount);
+    const oldW = editorCanvasEl.width;
+    const oldH = editorCanvasEl.height;
+    if (oldW === target.width && oldH === target.height) return false;
+
+    // Keep active sticker positions at the same relative spot when the user
+    // interactively switches layout or photo count. Snapshot loads skip this
+    // because the stored coordinates already belong to the snapshot's layout.
+    if (remapStickers && oldW > 0 && oldH > 0 && editorState.activeStickers.length) {
+        const sx = target.width / oldW;
+        const sy = target.height / oldH;
+        for (const sticker of editorState.activeStickers) {
+            sticker.x *= sx;
+            sticker.y *= sy;
+        }
+    }
+
+    editorCanvasEl.width = target.width;
+    editorCanvasEl.height = target.height;
+    editorExportCanvas.width = target.width;
+    editorExportCanvas.height = target.height;
+    return true;
+}
+
+function shouldTilePngFrame(width, height) {
+    return Math.abs((width / height) - EDITOR_BASE_ASPECT) > FRAME_TILE_ASPECT_TOLERANCE;
+}
+
 function getEditorSelectedSticker() {
     return editorState.activeStickers.find(sticker => sticker.id === editorState.selectedStickerId) || null;
 }
@@ -97,6 +156,9 @@ async function restoreEditorSnapshot(snapshot) {
     editorState.erasingStickerId = null;
     editorState.eraseLastPoint = null;
     editorState.eraserEnabled = false;
+
+    // Snapshot sticker coords already match the snapshot's layout — don't remap.
+    syncEditorCanvasSize();
 
     renderEditorPanels();
     renderEditorCanvas();
@@ -462,6 +524,10 @@ async function openEditorFromHistory() {
     editorState.historyIndex = -1;
     stickerSearchInputEl.value = '';
 
+    // Size the canvas (and the export canvas) to match the layout before the
+    // first render so sticker placements + frame drawing see the real bounds.
+    syncEditorCanvasSize();
+
     editorOverlayEl.classList.add('visible');
     editorOverlayEl.setAttribute('aria-hidden', 'false');
     renderEditorPanels();
@@ -486,6 +552,7 @@ function toggleEditorPhotoSelection(photoId) {
         editorState.selectedPhotoIds = [...editorState.selectedPhotoIds, photoId];
     }
 
+    syncEditorCanvasSize({ remapStickers: true });
     renderEditorPhotoPicker();
     renderEditorCanvas();
 }
@@ -704,13 +771,24 @@ function drawImageCover(targetCtx, image, slot) {
     targetCtx.restore();
 }
 
-function drawEditorFrame(targetCtx, width, height, frameImage) {
+function drawEditorFrame(targetCtx, width, height, frameImage, slots) {
     const inset = 22;
 
     if (editorState.frameStyle === 'none') return;
 
     if (frameImage) {
-        targetCtx.drawImage(frameImage, 0, 0, width, height);
+        // PNG frame assets are authored for ~4:5 portrait. Tile one copy per
+        // slot whenever the outer canvas aspect is far from 4:5 (happens for
+        // split-v / split-h layouts where each slot is still 4:5 but the
+        // overall canvas is landscape/tall). For single + 2x2 grid we stay
+        // at 4:5 overall and one outer frame is enough.
+        if (slots && slots.length > 1 && shouldTilePngFrame(width, height)) {
+            for (const slot of slots) {
+                targetCtx.drawImage(frameImage, slot.x, slot.y, slot.w, slot.h);
+            }
+        } else {
+            targetCtx.drawImage(frameImage, 0, 0, width, height);
+        }
         return;
     }
 
@@ -814,19 +892,22 @@ async function renderEditorScene(targetCtx, targetCanvas, includeSelection, toke
     targetCtx.fillStyle = '#e2e8f0';
     targetCtx.fillRect(42, 42, width - 84, height - 84);
 
+    const slots = photoImages.length
+        ? getLayoutSlots(editorState.collageLayout, photoImages.length, width, height)
+        : [];
+
     if (!photoImages.length) {
         targetCtx.fillStyle = '#0f172a';
         targetCtx.font = '600 34px Segoe UI';
         targetCtx.textAlign = 'center';
         targetCtx.fillText('Chưa có ảnh để chỉnh sửa', width / 2, height / 2);
     } else {
-        const slots = getLayoutSlots(editorState.collageLayout, photoImages.length, width, height);
         photoImages.slice(0, slots.length).forEach((image, index) => {
             drawImageCover(targetCtx, image, slots[index]);
         });
     }
 
-    drawEditorFrame(targetCtx, width, height, frameImage);
+    drawEditorFrame(targetCtx, width, height, frameImage, slots);
     stickerSnapshot.forEach((sticker, index) => drawSticker(targetCtx, sticker, stickerImages[index], includeSelection));
     return true;
 }

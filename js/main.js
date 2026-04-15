@@ -259,6 +259,7 @@ editorLayoutOptionsEl.addEventListener('click', event => {
     if (!button) return;
     if (editorState.collageLayout === button.dataset.layoutId) return;
     editorState.collageLayout = button.dataset.layoutId;
+    syncEditorCanvasSize({ remapStickers: true });
     renderEditorLayoutOptions();
     renderEditorCanvas();
     pushEditorHistory();
