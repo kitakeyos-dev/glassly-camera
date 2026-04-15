@@ -30,25 +30,16 @@ helpBtnEl.addEventListener('click', openHelpSheet);
 helpCloseBtnEl.addEventListener('click', closeHelpSheet);
 historyShortcutBtnEl.addEventListener('click', openHistoryDrawer);
 
-// Effects sheet (filter + palette combined)
-function openEffectsSheet(tab) {
+// Effects overlay — floating palette + filter bars above the capture dock.
+function openEffectsSheet() {
     effectsSheetEl.classList.add('visible');
     effectsSheetEl.setAttribute('aria-hidden', 'false');
-    if (tab) setEffectsTab(tab);
+    effectsBtnEl.classList.add('active');
 }
 function closeEffectsSheet() {
     effectsSheetEl.classList.remove('visible');
     effectsSheetEl.setAttribute('aria-hidden', 'true');
-}
-function setEffectsTab(tabId) {
-    effectsTabButtons.forEach(btn => {
-        const active = btn.dataset.effectsTab === tabId;
-        btn.classList.toggle('active', active);
-        btn.setAttribute('aria-selected', String(active));
-    });
-    effectsPanels.forEach(panel => {
-        panel.classList.toggle('active', panel.dataset.effectsPanel === tabId);
-    });
+    effectsBtnEl.classList.remove('active');
 }
 effectsBtnEl.addEventListener('click', () => {
     if (effectsSheetEl.classList.contains('visible')) {
@@ -56,10 +47,6 @@ effectsBtnEl.addEventListener('click', () => {
     } else {
         openEffectsSheet();
     }
-});
-effectsCloseBtnEl.addEventListener('click', closeEffectsSheet);
-effectsTabButtons.forEach(btn => {
-    btn.addEventListener('click', () => setEffectsTab(btn.dataset.effectsTab));
 });
 
 historyUploadBtnEl.addEventListener('click', () => uploadHistoryInputEl.click());

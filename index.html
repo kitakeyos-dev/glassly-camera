@@ -190,22 +190,13 @@
 </button>
 
 <div id="effects-sheet" aria-hidden="true">
-    <div class="bottom-sheet-header">
-        <span class="bottom-sheet-handle"></span>
-        <h4 class="bottom-sheet-title">Hiệu ứng</h4>
-        <button id="effects-close-btn" class="bottom-sheet-close editor-icon-btn" type="button" aria-label="Dong"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="effects-group">
+        <span class="effects-group-label">Chất liệu kính</span>
+        <div id="palette-bar" aria-label="Chat lieu kinh"></div>
     </div>
-    <nav class="effects-tabbar" role="tablist">
-        <button class="effects-tab active" type="button" role="tab" data-effects-tab="filter" aria-selected="true">Bộ lọc camera</button>
-        <button class="effects-tab" type="button" role="tab" data-effects-tab="palette" aria-selected="false">Chất liệu kính</button>
-    </nav>
-    <div class="effects-body">
-        <div class="effects-panel active" data-effects-panel="filter">
-            <div id="filter-bar" aria-label="Bo loc camera"></div>
-        </div>
-        <div class="effects-panel" data-effects-panel="palette">
-            <div id="palette-bar" aria-label="Chat lieu kinh"></div>
-        </div>
+    <div class="effects-group">
+        <span class="effects-group-label">Bộ lọc camera</span>
+        <div id="filter-bar" aria-label="Bo loc camera"></div>
     </div>
 </div>
 
@@ -213,16 +204,18 @@
     <button id="help-btn" class="capture-dock-btn" type="button" aria-label="Huong dan cu chi">
         <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </button>
-    <button id="effects-btn" class="capture-dock-btn" type="button" aria-label="Hieu ung va bo loc">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/><path d="m5.6 5.6 1.4 1.4"/><path d="m17 17 1.4 1.4"/><path d="m5.6 18.4 1.4-1.4"/><path d="m17 7 1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
-    </button>
     <button id="capture-btn" type="button" aria-label="Chup va luu anh">
         <img src="assets/icons/camerabutton.png" alt="">
         <span class="capture-fallback" aria-hidden="true"><svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg></span>
     </button>
-    <button id="history-shortcut-btn" class="capture-dock-btn" type="button" aria-label="Mo lich su anh">
-        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-    </button>
+    <div class="capture-dock-stack">
+        <button id="effects-btn" class="capture-dock-btn" type="button" aria-label="Hieu ung va bo loc">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/><path d="m5.6 5.6 1.4 1.4"/><path d="m17 17 1.4 1.4"/><path d="m5.6 18.4 1.4-1.4"/><path d="m17 7 1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+        </button>
+        <button id="history-shortcut-btn" class="capture-dock-btn" type="button" aria-label="Mo lich su anh">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+    </div>
 </div>
 
 <div id="help-sheet" aria-hidden="true">
