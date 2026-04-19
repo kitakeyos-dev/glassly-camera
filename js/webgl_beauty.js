@@ -435,10 +435,3 @@ function applyImageFilters(source, width, height, options) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return pipelineCanvas;
 }
-
-// Back-compat alias kept in case any older call site still references it.
-function applyBeautyFilter(source, width, height, strength) {
-    return applyImageFilters(source, width, height, {
-        beauty: { enabled: true, strength }
-    });
-}

@@ -192,3 +192,8 @@ const CAMERA_FILTERS = [
     { id: 'sketch',    label: 'Nét chì',   kind: 'shader', shader: 'sketch' },
     { id: 'crayon',    label: 'Sáp màu',   kind: 'shader', shader: 'crayon' }
 ];
+
+// O(1) lookups used inside the camera onResults / glass draw hot paths so we
+// don't scan the filter/palette arrays once or twice per rendered frame.
+const CAMERA_FILTER_BY_ID = new Map(CAMERA_FILTERS.map(f => [f.id, f]));
+const GLASS_PALETTE_BY_ID = new Map(GLASS_PALETTES.map(p => [p.id, p]));

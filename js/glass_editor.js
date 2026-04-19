@@ -157,7 +157,7 @@ function drawGlassEditorScene(targetCtx, dimOutside) {
     const w = glassEditorCanvasEl.width;
     const h = glassEditorCanvasEl.height;
     const glass = glassEditorState.glass;
-    const palette = GLASS_PALETTES.find(p => p.id === currentGlassPalette) || GLASS_PALETTES[0];
+    const palette = GLASS_PALETTE_BY_ID.get(currentGlassPalette) || GLASS_PALETTES[0];
 
     targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     targetCtx.clearRect(0, 0, w, h);

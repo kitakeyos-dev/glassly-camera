@@ -1,5 +1,16 @@
 // MediaPipe Hands + Camera lifecycle
 
+// Scratch objects reused across frames so the hot path doesn't allocate a
+// new options tree on every render. Properties are overwritten before each
+// applyImageFilters call.
+const pipelineOptionsScratch = {
+    beauty: { enabled: false, strength: 0 },
+    skinWhiten: { enabled: false, strength: 0 },
+    lut: { url: null, mix: 1.0 },
+    shader: null
+};
+let lastFrozenBtnVisible = null;
+
 function onResults(results) {
     if (!loadingEl.classList.contains('hidden')) {
         if (loadingProgressFillEl) loadingProgressFillEl.style.width = '100%';
@@ -116,7 +127,7 @@ function onResults(results) {
                 const pinkyMid = { x: (lPinky.x + rPinky.x) / 2, y: (lPinky.y + rPinky.y) / 2 };
                 const ry = Math.hypot(pinkyMid.x - cx, pinkyMid.y - cy) * 1.15;
                 const angle = Math.atan2(rAnchor.y - lAnchor.y, rAnchor.x - lAnchor.x);
-                currentGestureData = { type: 'circle', cx, cy, rx, ry, angle, isResizable: true };
+                currentGestureData = { type: 'circle', cx, cy, rx, ry, angle };
                 gestureName = 'VÒNG TRÒN';
             }
         }
@@ -170,7 +181,7 @@ function onResults(results) {
 
     const usesFrozenBg = frozenGlass && !activeGlass;
     const bgFilterId = usesFrozenBg ? frozenFilter : currentCameraFilter;
-    const bgFilterDef = CAMERA_FILTERS.find(f => f.id === bgFilterId);
+    const bgFilterDef = CAMERA_FILTER_BY_ID.get(bgFilterId);
     const bgFilterKind = bgFilterDef ? bgFilterDef.kind : 'none';
     const bgFilterCss = bgFilterKind === 'css' ? bgFilterDef.css : 'none';
     const bgFilterLutUrl = bgFilterKind === 'lut' ? bgFilterDef.lut : null;
@@ -181,14 +192,16 @@ function onResults(results) {
     // CSS filters stay on ctx.filter because they're already GPU-accelerated
     // and don't need the WebGL round trip.
     const needsPipeline = beautyEnabled || skinWhitenEnabled || bgFilterLutUrl || bgFilterShader;
-    const pipelineOptions = needsPipeline
-        ? {
-            beauty: beautyEnabled ? { enabled: true, strength: beautyStrength } : null,
-            skinWhiten: skinWhitenEnabled ? { enabled: true, strength: skinWhitenStrength } : null,
-            lut: bgFilterLutUrl ? { url: bgFilterLutUrl, mix: 1.0 } : null,
-            shader: bgFilterShader
-          }
-        : null;
+    let pipelineOptions = null;
+    if (needsPipeline) {
+        pipelineOptionsScratch.beauty.enabled = beautyEnabled;
+        pipelineOptionsScratch.beauty.strength = beautyStrength;
+        pipelineOptionsScratch.skinWhiten.enabled = skinWhitenEnabled;
+        pipelineOptionsScratch.skinWhiten.strength = skinWhitenStrength;
+        pipelineOptionsScratch.lut.url = bgFilterLutUrl;
+        pipelineOptionsScratch.shader = bgFilterShader;
+        pipelineOptions = pipelineOptionsScratch;
+    }
 
     const rawBackgroundSource = usesFrozenBg ? frozenCanvas : results.image;
     let backgroundToDraw = rawBackgroundSource;
@@ -236,10 +249,14 @@ function onResults(results) {
     // Surface dedicated controls while a glass is frozen — tapping the
     // canvas still clears, but the buttons make the interactions
     // discoverable and also let the user reuse the frame with a different
-    // photo via the glass editor.
+    // photo via the glass editor. State-diff so we don't touch classList
+    // every single frame.
     const frozen = !!frozenGlass;
-    clearFrameBtnEl.classList.toggle('visible', frozen);
-    insertPhotoBtnEl.classList.toggle('visible', frozen);
+    if (frozen !== lastFrozenBtnVisible) {
+        clearFrameBtnEl.classList.toggle('visible', frozen);
+        insertPhotoBtnEl.classList.toggle('visible', frozen);
+        lastFrozenBtnVisible = frozen;
+    }
 }
 
 const hands = new Hands({

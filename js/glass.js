@@ -37,13 +37,13 @@ function buildPath(glass, targetCtx) {
 
 function drawGlass3D(liveImage, glass, progress) {
     const isSnapped = progress >= 1;
-    const liveFilterDef = CAMERA_FILTERS.find(f => f.id === currentCameraFilter);
+    const liveFilterDef = CAMERA_FILTER_BY_ID.get(currentCameraFilter);
     // LUT filters are already baked into liveImage by the WebGL pipeline
     // upstream, so only the 'css' kind still wants a ctx.filter.
     const liveFilterCss = liveFilterDef && liveFilterDef.kind === 'css'
         ? liveFilterDef.css
         : 'none';
-    const palette = GLASS_PALETTES.find(p => p.id === currentGlassPalette) || GLASS_PALETTES[0];
+    const palette = GLASS_PALETTE_BY_ID.get(currentGlassPalette) || GLASS_PALETTES[0];
     ctx.save();
 
     // Clip vùng hình
