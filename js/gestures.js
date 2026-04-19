@@ -45,15 +45,6 @@ function checkFingerHeartGesture(lm) {
     return distTips < handSize * 0.9;
 }
 
-// Ngôi sao: 5 ngón xoè đều (1 tay)
-function checkStarGesture(lm) {
-    return isFingerExtended(lm,  4,  3) &&
-           isFingerExtended(lm,  8,  6) &&
-           isFingerExtended(lm, 12, 10) &&
-           isFingerExtended(lm, 16, 14) &&
-           isFingerExtended(lm, 20, 18);
-}
-
 // Trái tim 2 tay: cái + trỏ duỗi, 3 ngón còn lại gập, đầu trỏ 2 tay
 // chạm nhau (đỉnh khe trái tim) và đầu cái 2 tay chạm nhau (đáy nhọn).
 function checkTwoHandHeartGesture(h1, h2) {

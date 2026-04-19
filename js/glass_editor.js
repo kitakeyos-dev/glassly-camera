@@ -59,10 +59,6 @@ function getGlassBoundingBox(glass) {
         const halfH = glass.rx * sin + glass.ry * cos;
         return { x: glass.cx - halfW, y: glass.cy - halfH, w: halfW * 2, h: halfH * 2 };
     }
-    if (glass.type === 'star') {
-        const r = Math.max(glass.rx, glass.ry);
-        return { x: glass.cx - r, y: glass.cy - r, w: r * 2, h: r * 2 };
-    }
     if (glass.type === 'heart') {
         const hw = glass.rx * 1.2;
         const hh = glass.ry * 1.15;

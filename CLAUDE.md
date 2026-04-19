@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Glassly (aka picai-clone) — a vanilla-JS PWA camera app that uses MediaPipe Hands to detect finger gestures and overlay a 3D "glass" shape on the live video, then lets the user edit captures with collage/frame/sticker/text tools.
+Glassly (aka picai-clone) — a vanilla-JS web camera app that uses MediaPipe Hands to detect finger gestures and overlay a 3D "glass" shape on the live video, then lets the user edit captures with collage/frame/sticker/text tools.
 
 No build step, no package manager, no test suite. The app is plain HTML + CSS + ES scripts loaded directly by the browser.
 
@@ -35,7 +35,7 @@ Because everything is global, renaming a symbol requires updating every file tha
 ### Camera / gesture / glass pipeline (hot path)
 Driven by MediaPipe Hands, which pushes frames into [js/camera.js](js/camera.js) via `hands.onResults(onResults)`. Every video frame:
 
-1. [js/camera.js](js/camera.js) receives `results` (image + landmarks), runs the gesture detectors from [js/gestures.js](js/gestures.js) to decide which shape (triangle / star / heart / two-hand heart / L-frame quad / stretch circle) is being formed, and computes the shape geometry from the landmark pixel positions.
+1. [js/camera.js](js/camera.js) receives `results` (image + landmarks), runs the gesture detectors from [js/gestures.js](js/gestures.js) to decide which shape (triangle / heart / two-hand heart / L-frame quad / stretch circle) is being formed, and computes the shape geometry from the landmark pixel positions.
 2. A stability timer (`snapTimer` + `STABILITY_THRESHOLD` + `SNAP_DELAY` from [js/config.js](js/config.js)) waits until the shape holds still long enough, then "freezes" it — snapshotting `results.image` into `frozenCanvas` and entering cooldown until the user taps the output canvas to clear it.
 3. [js/glass.js](js/glass.js) draws the frosted-glass look: `buildPath(glass)` emits the correct `Path2D` per shape, `drawGlass3D` clips to it, zooms/filters the inside, adds shimmer/bevel/chromatic aberration when snapped, and `drawProgressRing` animates the capture progress ring.
 4. The main `canvasEl` is the live output. `frozenCanvas`, `saveFrameCanvas`, `thumbFrameCanvas`, `editorExportCanvas` are offscreen canvases created in [js/dom.js](js/dom.js) or [js/capture.js](js/capture.js) and reused across frames/captures — do not allocate new canvases inside `onResults` or `saveCurrentFrame`.
@@ -52,9 +52,6 @@ This loop runs at camera framerate. Work added here is multiplied by ~30/sec, so
 
 ### Glass-shape photo editor
 [js/glass_editor.js](js/glass_editor.js) is a second, separate editor triggered by the "Chèn ảnh" button once a glass shape has frozen. It reuses `frozenGlass` + `frozenCanvas` as a clip mask: the user picks a photo from history (or uploads), drags / pinch-zooms it inside the glass, and saves — producing a brand-new capture that looks like the camera shot that photo through the glass. Because front-camera captures bake the mirror flip into `frozenCanvas` via `saveCurrentFrame`, `glassEditorState.frozenFacingMode` is tracked so picked photos get drawn through the same flip and stay in the same coordinate space as the background.
-
-### Service worker
-[sw.js](sw.js) is cache-first with network fallback, and precaches the app shell and the MediaPipe CDN scripts. If you add a new top-level asset that must work offline on first load, add its path to `PRECACHE_URLS`. Runtime fetches for same-origin, jsdelivr, googleapis, and gstatic are auto-cached on use. The `__VERSION__` token in `CACHE_NAME` is a build-time placeholder — leave it alone locally.
 
 ## Conventions worth knowing
 

@@ -616,30 +616,3 @@ try {
 } catch (_) {
     // localStorage can throw in private mode — skip onboarding silently.
 }
-
-// Register PWA service worker
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
-            .then(reg => {
-                reg.update();
-                // Poll for updates whenever the tab becomes visible again.
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) reg.update();
-                });
-                // Also poll on a timer so long-running foreground sessions
-                // (especially on mobile where users rarely tab away) still
-                // pick up new builds without a manual refresh.
-                setInterval(() => reg.update(), 5 * 60 * 1000);
-                // When a new SW takes control, reload the page once so the
-                // user immediately sees the latest HTML/CSS/JS.
-                let refreshing = false;
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    if (refreshing) return;
-                    refreshing = true;
-                    window.location.reload();
-                });
-            })
-            .catch(err => console.warn('SW registration failed:', err));
-    });
-}
