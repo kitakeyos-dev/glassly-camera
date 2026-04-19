@@ -1,6 +1,5 @@
 // Glassly service worker — cache-first PWA with full offline support.
-// CACHE_NAME is bumped automatically on each deploy by deploy.py, which
-// rewrites the __VERSION__ token below before zipping.
+// __VERSION__ is a build-time placeholder; bump it to invalidate the cache.
 
 const CACHE_NAME = 'glassly-__VERSION__';
 
@@ -97,10 +96,10 @@ self.addEventListener('activate', event => {
 
 // Fetch strategy:
 //  - Navigation requests (HTML): network-first with cache fallback so a
-//    single reload on a mobile browser is enough to see a fresh deploy.
+//    single reload on a mobile browser is enough to see a fresh build.
 //  - Everything else (JS/CSS/images/MediaPipe CDN): cache-first, because
-//    every asset URL is already cache-busted with ?v=<timestamp> by the
-//    deploy pipeline, so cached entries are immutable for their version.
+//    every asset URL is expected to be cache-busted with ?v=<timestamp>
+//    at build time, so cached entries are immutable for their version.
 self.addEventListener('fetch', event => {
     const req = event.request;
     if (req.method !== 'GET') return;

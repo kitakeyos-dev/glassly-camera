@@ -629,7 +629,7 @@ if ('serviceWorker' in navigator) {
                 });
                 // Also poll on a timer so long-running foreground sessions
                 // (especially on mobile where users rarely tab away) still
-                // pick up fresh deploys without a manual refresh.
+                // pick up new builds without a manual refresh.
                 setInterval(() => reg.update(), 5 * 60 * 1000);
                 // When a new SW takes control, reload the page once so the
                 // user immediately sees the latest HTML/CSS/JS.
