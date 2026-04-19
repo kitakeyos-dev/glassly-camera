@@ -10,7 +10,7 @@
 - **Lịch sử ảnh** FIFO 10 tấm gần nhất, có thumbnail riêng để scroll mượt.
 - **Editor ảnh**: ghép collage đến 4 ảnh, đổi khung kawaii, thêm sticker (có undo/redo, xoá cục bộ), thêm chữ với font + cỡ + màu.
 - **Glass editor**: chèn ảnh khác vào đúng khung kính vừa đóng băng, kéo-thả và pinch-zoom.
-- **Chụp ảnh**: tap nhanh = đếm ngược, giữ lâu = burst, phím `Space` = chụp ngay.
+- **Chụp ảnh**: tap nhanh = đếm ngược, giữ lâu = burst, phím `Space` = như tap nút máy ảnh (cũng qua đếm ngược).
 - **Đổi camera trước / sau** và chế độ toàn màn hình.
 - Giao diện tiếng Việt.
 

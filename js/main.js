@@ -186,9 +186,12 @@ uploadCustomStickerInputEl.addEventListener('change', async event => {
 });
 
 document.addEventListener('keydown', e => {
-    if (e.code !== 'Space') return;
+    if (e.code !== 'Space' || e.repeat) return;
+    // Don't hijack Space when the user is typing in a text field.
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     e.preventDefault();
-    saveCurrentFrame();
+    runCountdownCapture();
 });
 
 // Switch camera (front / back)
